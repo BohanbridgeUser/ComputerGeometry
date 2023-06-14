@@ -1,5 +1,6 @@
 #ifndef _VECTOR_H_
 #define _VECTOR_H_
+#include "BasicFun.h"
 #include "Point.h"
 class Vector : public Point {
 	public:
@@ -13,7 +14,7 @@ class Vector : public Point {
 		Vector& rotate(const double& angle) {
 			double ox = x, oy = y;
 			x = ox * cos(angle) - oy * sin(angle);
-			y = ox * sin(angle) + oy * con(angle);
+			y = ox * sin(angle) + oy * cos(angle);
 			return *this;
 		}
 		Vector rotate(const double& angle) const {
@@ -23,7 +24,7 @@ class Vector : public Point {
 		Vector& operator+(const Vector& another) { x += another.x; y += another.y; return *this; }
 		Vector& operator-(const Vector& another) { x -= another.x; y -= another.y; return *this; } 
 		Vector& operator/(const double& scale) { x /= scale; y /= scale; return *this;}
-		bool operator==(const Vector& another) {return ((x== another.x) && (y == another.y);)}
+		bool operator==(const Vector& another) {return ((x== another.x) && (y == another.y));}
 		friend Vector operator*(const Vector& a,const double& scale);
 		friend Vector operator*(const double& scale, const Vector& a);
 		friend Vector operator/(const Vector& a, const double& scale);
@@ -44,7 +45,7 @@ double Vector::len2()const
 }
 double Vector::len() const
 {
-	return sqrt(len2()):
+	return sqrt(len2());
 }
 double angle(const Vector& a, const Vector& b)
 {
