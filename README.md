@@ -1,1 +1,2 @@
 # This is a repository that contain codes of ComputerGeometry.
+This repository use `vcpkg` to manage all packages. So please install `vcpkg` and set crossplate compile option correctly before compiling.
