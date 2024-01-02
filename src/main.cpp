@@ -1,14 +1,24 @@
-#include <iostream>
-#include "Point.h"
-#include "Vector.h"
+#include <QtGui>
+#include <QSurfaceFormat>
 
+#include "window.h"
+
+#include <CGAL/Qt/resources.h>
 int main(int argc, char** argv)
 {
-	using std::cout;
-	using std::endl;
-	Point A(10.0,20.0);
-	Point B(30.0,40.0);
-	Vector V((A-B).x,(A-B).y);
-	cout << V.x << " " << V.y << endl;
-	return 0;
+  // Read command lines arguments
+  QApplication application(argc,argv);
+
+  CGAL_QT_INIT_RESOURCES;
+
+  QSurfaceFormat glFormat;
+	glFormat.setProfile(QSurfaceFormat::CoreProfile);
+	QSurfaceFormat::setDefaultFormat(glFormat);
+
+  MainWindow mainWindow;
+  mainWindow.show();
+
+  // Run main loop
+  return application.exec();
 }
+
