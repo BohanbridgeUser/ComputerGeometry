@@ -17,7 +17,7 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>2D Triangulation on 3D Sphere</string>
+   <string>MyComputerGeometry</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
@@ -76,11 +76,17 @@
     <property name="title">
      <string>Function</string>
     </property>
-    <addaction name="actionConvexHull"/>
-    <addaction name="actionConvexHull_EE"/>
-    <addaction name="actionConvexHull_Jarvis_March"/>
-    <addaction name="actionConvexHull_Graham_Scan"/>
-    <addaction name="actionConvexHull_Divide_and_Conquer"/>
+    <widget class="QMenu" name="menuConvexHull">
+     <property name="title">
+      <string>ConvexHull</string>
+     </property>
+     <addaction name="actionConvexHull_EP"/>
+     <addaction name="actionConvexHull_EE_2"/>
+     <addaction name="actionConvexHull_Jarvis_March_2"/>
+     <addaction name="actionConvexHull_Graham_Scan_2"/>
+     <addaction name="actionConvexHull_Divide_and_Conquer_2"/>
+    </widget>
+    <addaction name="menuConvexHull"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -206,6 +212,31 @@
    </property>
   </action>
   <action name="actionConvexHull_Divide_and_Conquer">
+   <property name="text">
+    <string>ConvexHull_Divide_and_Conquer</string>
+   </property>
+  </action>
+  <action name="actionConvexHull_EP">
+   <property name="text">
+    <string>ConvexHull_EP</string>
+   </property>
+  </action>
+  <action name="actionConvexHull_EE_2">
+   <property name="text">
+    <string>ConvexHull_EE</string>
+   </property>
+  </action>
+  <action name="actionConvexHull_Jarvis_March_2">
+   <property name="text">
+    <string>ConvexHull_Jarvis_March</string>
+   </property>
+  </action>
+  <action name="actionConvexHull_Graham_Scan_2">
+   <property name="text">
+    <string>ConvexHull_Graham_Scan</string>
+   </property>
+  </action>
+  <action name="actionConvexHull_Divide_and_Conquer_2">
    <property name="text">
     <string>ConvexHull_Divide_and_Conquer</string>
    </property>

@@ -31,11 +31,11 @@ protected:
 
         /* My function */
         void on_actionPoints_triggered();
-        void on_actionConvexHull_triggered();
-        void on_actionConvexHull_EE_triggered();
-        void on_actionConvexHull_Jarvis_March_triggered();
-        void on_actionConvexHull_Graham_Scan_triggered();
-        void on_actionConvexHull_Divide_and_Conquer_triggered();
+        void on_actionConvexHull_EP_triggered();
+        void on_actionConvexHull_EE_2_triggered();
+        void on_actionConvexHull_Jarvis_March_2_triggered();
+        void on_actionConvexHull_Graham_Scan_2_triggered();
+        void on_actionConvexHull_Divide_and_Conquer_2_triggered();
 };
 
 

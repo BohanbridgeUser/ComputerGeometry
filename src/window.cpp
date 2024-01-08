@@ -110,31 +110,31 @@
         update();
     }
 
-    void MainWindow::on_actionConvexHull_triggered()
+    void MainWindow::on_actionConvexHull_EP_triggered()
     {
         m_glviewer->convexhull();
         update();
     }
 
-    void MainWindow::on_actionConvexHull_EE_triggered()
+    void MainWindow::on_actionConvexHull_EE_2_triggered()
     {
         m_glviewer->convexhull_ee();
         update();
     }
 
-    void MainWindow::on_actionConvexHull_Jarvis_March_triggered()
+    void MainWindow::on_actionConvexHull_Jarvis_March_2_triggered()
     {
         m_glviewer->convexhull_jarvis_march();
         update();
     }
 
-    void MainWindow::on_actionConvexHull_Graham_Scan_triggered()
+    void MainWindow::on_actionConvexHull_Graham_Scan_2_triggered()
     {
         m_glviewer->convexhull_graham_scan();
         update();
     }
 
-    void MainWindow::on_actionConvexHull_Divide_and_Conquer_triggered()
+    void MainWindow::on_actionConvexHull_Divide_and_Conquer_2_triggered()
     {
         m_glviewer->convexhull_divide_and_conquer();
         update();
