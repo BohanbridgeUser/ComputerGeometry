@@ -47,6 +47,23 @@
         m_gl_display->check_buffer();
     }
 
+    bool glViewer::load_file_off(const std::string& filename)
+    {
+        m_model->clean();
+        m_gl_display->setdisplaymode(0);
+        if(m_model->load_file_off(filename))
+        {
+            DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+            points_data_to_display(points_2);
+            m_model->flip_empty();
+            adjustCamera();
+            m_gl_display->check_buffer();
+            return true;
+        }
+        else
+            return false;
+    }
+
     void glViewer::generate_points()
     {
         m_model->clean();
@@ -136,8 +153,9 @@
 
 /// @name Inquiry
 /// @{
-    int glViewer::Get_Num_Vertices() { return m_model->Get_Num_Vertices();}
-    int glViewer::Get_Num_Facets() { return m_model->Get_Num_Facets(); }
+    int glViewer::Get_Points2_Num_Vertices() { return m_model->Get_Points2_Num_Vertices(); }
+    int glViewer::Get_Mesh_Num_Vertices() { return m_model->Get_Mesh_Num_Vertices();}
+    int glViewer::Get_Mesh_Num_Facets() { return m_model->Get_Mesh_Num_Facets(); }
 /// @}
 
 /// @name Protected Static Member Variables

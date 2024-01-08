@@ -1,5 +1,5 @@
 #include "model.h"
-
+#include <fstream>
 
 namespace MyCG
 {
@@ -39,6 +39,23 @@ namespace MyCG
             return !m_empty;
         }
 
+        bool Model::load_file_off(const std::string& filename)
+        {
+            clean();
+            std::fstream file(filename);
+            if(!file.is_open())
+            {
+                std::cout << "Error opening file" << std::endl;
+                return false;
+            }
+            double loc_x, loc_y, loc_z;
+            while(file >> loc_x >> loc_y >> loc_z)
+            {
+                m_points_2.push_back(Point_2(loc_x, loc_y));
+            }
+            return true;
+        }
+
         void Model::generate_points()
         {
             clean();
@@ -59,14 +76,21 @@ namespace MyCG
     /// @}
     /// @name Inquiry
     /// @{
-        int Model::Get_Num_Vertices()
+        int Model::Get_Points2_Num_Vertices()
+        {
+            return m_points_2.size();
+        }
+
+        int Model::Get_Mesh_Num_Vertices()
         {
             return m_mesh.size_of_vertices();
         }
-        int Model::Get_Num_Facets()
+        
+        int Model::Get_Mesh_Num_Facets()
         {
             return m_mesh.size_of_facets();
         }
+
         void Model::calculate_Bbox()
         {
             if(m_empty)

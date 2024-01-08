@@ -1,4 +1,5 @@
 #include "myalgorithm.h"
+#include <iostream>
 #include <vector>
 #include <stack>
 #include <algorithm>
@@ -227,8 +228,184 @@ namespace MyCG
         return convexhull_segments;
     }
 
+    int DAC(const DataPoints_2& rpoints, 
+             std::vector<int>& convexhull_points, 
+             int begin, int end)
+    {
+        // 0. Recursive termination condition
+        if(end - begin + 1 < 6)
+        {
+            int LTL = begin;
+            for(int i=begin+1;i<=end;++i)
+            {
+                if(rpoints[i].x() < rpoints[LTL].x())
+                    LTL = i;
+                else if(rpoints[i].x() == rpoints[LTL].x() && rpoints[i].y() < rpoints[LTL].y())
+                    LTL = i;
+            }
+            int i=LTL, cnt = 0;
+            convexhull_points[begin+cnt++] = LTL;
+            do
+            {
+                int rightest = -1;
+                for(int j=begin;j<=end;++j)
+                {
+                    if(i==j) continue;
+                    if(rightest==-1 || !ToLeft(rpoints[i],rpoints[rightest],rpoints[j]))
+                        rightest = j;
+                }
+                if(rightest!=LTL) convexhull_points[begin+cnt++] = rightest;
+                i = rightest;
+            }while(LTL!=i);
+            return cnt+begin-1;
+        }       
+        
+        // 1. Divide
+        int mid = (begin + end) / 2;
+        int l_tail = DAC(rpoints,convexhull_points,begin,mid);
+        int r_tail = DAC(rpoints,convexhull_points,mid+1,end);
+        // 2. Merge
+        // 2.1 find the rightest point in the left part and the leftest point in the right part
+        //     find the leftest point in the right part and the rightest point in the left part
+        int l_righest = l_tail, r_leftest = mid+1, l_leftest = begin, r_righest = r_tail;
+        for(int i=begin;i<=l_tail;++i)
+        {   
+            if(rpoints[convexhull_points[i]].x() > rpoints[convexhull_points[l_righest]].x())
+                l_righest = i;
+            else if(rpoints[convexhull_points[i]].x() == rpoints[convexhull_points[l_righest]].x() &&
+                    rpoints[convexhull_points[i]].y() >  rpoints[convexhull_points[l_righest]].y())
+                l_righest = i;
+            if(rpoints[convexhull_points[i]].x() < rpoints[convexhull_points[l_leftest]].x())
+                l_leftest = i;
+            else if(rpoints[convexhull_points[i]].x() == rpoints[convexhull_points[l_leftest]].x() &&
+                    rpoints[convexhull_points[i]].y() <  rpoints[convexhull_points[l_leftest]].y())
+                l_leftest = i;
+        }
+        for(int i=mid+1;i<=r_tail;++i)
+        {
+            if(rpoints[convexhull_points[i]].x() < rpoints[convexhull_points[r_leftest]].x())
+                r_leftest = i;
+            else if(rpoints[convexhull_points[i]].x() == rpoints[convexhull_points[r_leftest]].x() &&
+                    rpoints[convexhull_points[i]].y() <  rpoints[convexhull_points[r_leftest]].y())
+                r_leftest = i;
+            if(rpoints[convexhull_points[i]].x() > rpoints[convexhull_points[r_righest]].x())
+                r_righest = i;
+            else if(rpoints[convexhull_points[i]].x() == rpoints[convexhull_points[r_righest]].x() &&
+                    rpoints[convexhull_points[i]].y() >  rpoints[convexhull_points[r_righest]].y())
+                r_righest = i;
+        }
+
+        // 2.2 Zigzag to find the tangent
+        int l_t = -1, r_t = -1, l_b = -1, r_b = -1;
+        auto Next_r = [=](int r_index)->int{
+            if(r_index == r_tail) return mid + 1;
+            return r_index + 1;
+        };
+        auto Last_r = [=](int r_index)->int{
+            if(r_index == mid + 1) return r_tail;
+            return r_index - 1;
+        };
+        auto Next_l = [=](int l_index)->int{
+            if(l_index == l_tail) return begin;
+            return l_index + 1;
+        };
+        auto Last_l = [=](int l_index)->int{
+            if(l_index == begin) return l_tail;
+            return l_index - 1;
+        };
+        
+        int l_r = l_righest, r_l = r_leftest;
+        int l_next = Next_l(l_r), l_last = Last_l(l_r),
+            r_next = Next_r(r_l), r_last = Last_r(r_l);
+
+
+        while(l_t == -1 || r_t == -1)
+        {
+            while(ToLeft(rpoints[convexhull_points[l_r]],rpoints[convexhull_points[r_l]],rpoints[convexhull_points[r_next]]) != false ||
+                  ToLeft(rpoints[convexhull_points[l_r]],rpoints[convexhull_points[r_l]],rpoints[convexhull_points[r_last]]) != false)
+            {
+                r_l = r_last;
+                r_next = Next_r(r_l);
+                r_last = Last_r(r_l);
+            }
+            while(ToLeft(rpoints[convexhull_points[r_l]],rpoints[convexhull_points[l_r]],rpoints[convexhull_points[l_next]]) != true || 
+                  ToLeft(rpoints[convexhull_points[r_l]],rpoints[convexhull_points[l_r]],rpoints[convexhull_points[l_last]]) != true)
+            {
+                l_r = l_next;
+                l_next = Next_l(l_r);
+                l_last = Last_l(l_r);
+            }
+            if(ToLeft(rpoints[convexhull_points[l_r]],rpoints[convexhull_points[r_l]],rpoints[convexhull_points[r_next]])==false && 
+               ToLeft(rpoints[convexhull_points[l_r]],rpoints[convexhull_points[r_l]],rpoints[convexhull_points[r_last]])==false &&
+               ToLeft(rpoints[convexhull_points[r_l]],rpoints[convexhull_points[l_r]],rpoints[convexhull_points[l_next]])==true &&
+               ToLeft(rpoints[convexhull_points[r_l]],rpoints[convexhull_points[l_r]],rpoints[convexhull_points[l_last]])==true)
+            {
+                l_t = l_r;
+                r_t = r_l;
+            }
+        }
+
+        l_r = l_righest, r_l = r_leftest;
+        r_next = Next_r(r_l), r_last = Last_r(r_l);
+        l_next = Next_l(l_r), l_last = Last_l(l_r);
+        while(l_b == -1 || r_b == -1)
+        {
+            while(ToLeft(rpoints[convexhull_points[l_r]],rpoints[convexhull_points[r_l]],rpoints[convexhull_points[r_next]]) != true ||
+                  ToLeft(rpoints[convexhull_points[l_r]],rpoints[convexhull_points[r_l]],rpoints[convexhull_points[r_last]]) != true)
+            {
+                r_l = r_next;
+                r_next = Next_r(r_l);
+                r_last = Last_r(r_l);
+            }
+            while(ToLeft(rpoints[convexhull_points[r_l]],rpoints[convexhull_points[l_r]],rpoints[convexhull_points[l_next]]) != false ||
+                  ToLeft(rpoints[convexhull_points[r_l]],rpoints[convexhull_points[l_r]],rpoints[convexhull_points[l_last]]) != false)
+            {
+                l_r = l_last;
+                l_next = Next_l(l_r);
+                l_last = Last_l(l_r);
+            }
+            if(ToLeft(rpoints[convexhull_points[l_r]],rpoints[convexhull_points[r_l]],rpoints[convexhull_points[r_next]])==true &&
+               ToLeft(rpoints[convexhull_points[l_r]],rpoints[convexhull_points[r_l]],rpoints[convexhull_points[r_last]])==true &&
+               ToLeft(rpoints[convexhull_points[r_l]],rpoints[convexhull_points[l_r]],rpoints[convexhull_points[l_next]])==false &&
+               ToLeft(rpoints[convexhull_points[r_l]],rpoints[convexhull_points[l_r]],rpoints[convexhull_points[l_last]])==false)
+            {
+                l_b = l_r;
+                r_b = r_l;
+            }
+        }
+
+        // 2.3 Construct the convex hull
+        std::vector<int> convexhull_temp;
+        int i=l_t;
+        while(i!=l_b)
+        {
+            convexhull_temp.push_back(convexhull_points[i]);
+            i=Next_l(i);
+        }
+        convexhull_temp.push_back(convexhull_points[i]);
+        i = r_b;
+        while(i!=r_t)
+        {
+            convexhull_temp.push_back(convexhull_points[i]);
+            i=Next_r(i);
+        }     
+        convexhull_temp.push_back(convexhull_points[i]);          
+        
+        for(int i=0;i<convexhull_temp.size();++i)
+            convexhull_points[begin+i] = convexhull_temp[i];
+        return convexhull_temp.size()-1+begin;
+    }
+
     DataSegments_2 ConvexHull_2::ConvexHull_2_Divide_and_Conquer(const DataPoints_2& rpoints)
     {
-        return DataSegments_2();
+        DataPoints_2       points = rpoints;
+        std::vector<int>   convexhull_points(points.size());
+        std::sort(points.begin(),points.end(),sort_vertex_by_xy);
+        int end = DAC(points,convexhull_points,0,points.size()-1);
+        DataSegments_2  convexhull_lines;
+        for(int i=0;i<end;++i)
+            convexhull_lines.push_back(Segment_2(points[convexhull_points[i]],points[convexhull_points[i+1]]));
+        convexhull_lines.push_back(Segment_2(points[convexhull_points[end]],points[convexhull_points[0]]));
+        return convexhull_lines;
     }
 }

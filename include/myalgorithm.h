@@ -24,6 +24,8 @@ namespace MyCG
 
     int find_rightest(const DataPoints_2& rpoints, int index);
 
+    int DAC(const DataPoints_2& rpoints, std::vector<int>& convexhull_points, int begin, int end);
+
     class Sort_Vertex_by_Angle
     {
         public:

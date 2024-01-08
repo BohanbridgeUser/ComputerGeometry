@@ -33,7 +33,7 @@ IF(CGAL_FOUND AND Qt5_FOUND AND Eigen3_FOUND AND OpenGL_FOUND)
 
   INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/build)
   # ui file, created with Qt Designer
-  qt5_wrap_ui( uis res/CGUI.ui )
+  qt5_wrap_ui( uis res/UI/CGUI.ui )
   ADD_EXECUTABLE ( ${PROJECT_NAME} ${SRC_FILES} ${MOCS} ${uis} ${INCS})
   qt5_use_modules(${PROJECT_NAME} OpenGL)
 

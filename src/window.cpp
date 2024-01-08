@@ -47,29 +47,49 @@
             m_information->setPlainText(QString::fromStdString(info));
             return;
         }
-        if(suffix != "obj")
+
+        if(suffix == "obj")
+        {
+            std::string info = "Loading file: " + filename.toStdString() + "\n";
+            m_information->setPlainText(QString::fromStdString(info));
+            if(m_glviewer->load_file(filename.toStdString()))
+            {
+                std::string info = "File [ " + filename.toStdString() + " ] loaded.\n";
+                std::string details = "  Load mesh with " + std::to_string(m_glviewer->Get_Mesh_Num_Vertices()) 
+                                    + " vertices and " + std::to_string(m_glviewer->Get_Mesh_Num_Facets())
+                                    + " faces.\n";
+                m_information->setPlainText(QString::fromStdString(info+details));    
+            }
+            else
+            {
+                std::string info = "Failed load File [ " + filename.toStdString() + " ]!\n";
+                m_information->setPlainText(QString::fromStdString(info));
+            }   
+        }
+        else if(suffix == "off")
+        {
+            std::string info = "Loading file: " + filename.toStdString() + "\n";
+            m_information->setPlainText(QString::fromStdString(info));
+            if(m_glviewer->load_file_off(filename.toStdString()))
+            {
+                std::string info = "File [ " + filename.toStdString() + " ] loaded.\n";
+                std::string details = "  Load Points with " + std::to_string(m_glviewer->Get_Points2_Num_Vertices()) 
+                                    + " vertices \n";
+                m_information->setPlainText(QString::fromStdString(info+details));    
+            }
+            else
+            {
+                std::string info = "Failed load File [ " + filename.toStdString() + " ]!\n";
+                m_information->setPlainText(QString::fromStdString(info));
+            }   
+        }
+        else
         {
             QMessageBox::warning(this, tr("Error"), tr("File format not supported"));
             std::string info = "Failed load File [ " + filename.toStdString() + " ]!\n";
             m_information->setPlainText(QString::fromStdString(info));
             return;
         }
-
-        std::string info = "Loading file: " + filename.toStdString() + "\n";
-        m_information->setPlainText(QString::fromStdString(info));
-        if(m_glviewer->load_file(filename.toStdString()))
-        {
-            std::string info = "File [ " + filename.toStdString() + " ] loaded.\n";
-            std::string details = "  Load mesh with " + std::to_string(m_glviewer->Get_Num_Vertices()) 
-                                + " vertices and " + std::to_string(m_glviewer->Get_Num_Facets())
-                                + " faces.\n";
-            m_information->setPlainText(QString::fromStdString(info+details));    
-        }
-        else
-        {
-            std::string info = "Failed load File [ " + filename.toStdString() + " ]!\n";
-            m_information->setPlainText(QString::fromStdString(info));
-        }   
         update();
     }
     

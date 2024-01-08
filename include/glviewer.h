@@ -62,6 +62,7 @@ class glViewer : public CGAL::QGLViewer
         /// @name Operations
         /// @{ 
             bool load_file(const std::string& filename);
+            bool load_file_off(const std::string& filename);
             void adjustCamera();
         /// @}
         /// @name Access
@@ -69,8 +70,9 @@ class glViewer : public CGAL::QGLViewer
         /// @}
         /// @name Inquiry
         /// @{
-            int Get_Num_Vertices();
-            int Get_Num_Facets();
+            int Get_Points2_Num_Vertices();
+            int Get_Mesh_Num_Vertices();
+            int Get_Mesh_Num_Facets();
         /// @}
     protected:
         /// @name Protected Static Member Variables
