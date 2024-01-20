@@ -70,7 +70,16 @@
     <property name="title">
      <string>Generation</string>
     </property>
+    <widget class="QMenu" name="menuSegments">
+     <property name="title">
+      <string>Segments</string>
+     </property>
+     <addaction name="actionFrom_points"/>
+     <addaction name="actionOn_Circle"/>
+    </widget>
     <addaction name="actionPoints"/>
+    <addaction name="menuSegments"/>
+    <addaction name="actionConvexHulls"/>
    </widget>
    <widget class="QMenu" name="menuFunction">
     <property name="title">
@@ -86,7 +95,16 @@
      <addaction name="actionConvexHull_Graham_Scan_2"/>
      <addaction name="actionConvexHull_Divide_and_Conquer_2"/>
     </widget>
+    <widget class="QMenu" name="menuIntersection">
+     <property name="title">
+      <string>Intersection</string>
+     </property>
+     <addaction name="actionInterval"/>
+     <addaction name="actionSegments_2"/>
+     <addaction name="actionConvexHull_2"/>
+    </widget>
     <addaction name="menuConvexHull"/>
+    <addaction name="menuIntersection"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -239,6 +257,36 @@
   <action name="actionConvexHull_Divide_and_Conquer_2">
    <property name="text">
     <string>ConvexHull_Divide_and_Conquer</string>
+   </property>
+  </action>
+  <action name="actionInterval">
+   <property name="text">
+    <string>Interval</string>
+   </property>
+  </action>
+  <action name="actionFrom_points">
+   <property name="text">
+    <string>From points</string>
+   </property>
+  </action>
+  <action name="actionOn_Circle">
+   <property name="text">
+    <string>On Circle</string>
+   </property>
+  </action>
+  <action name="actionSegments_2">
+   <property name="text">
+    <string>Segments</string>
+   </property>
+  </action>
+  <action name="actionConvexHulls">
+   <property name="text">
+    <string>ConvexHulls</string>
+   </property>
+  </action>
+  <action name="actionConvexHull_2">
+   <property name="text">
+    <string>ConvexHull</string>
    </property>
   </action>
  </widget>

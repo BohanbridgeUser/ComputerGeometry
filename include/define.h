@@ -17,6 +17,13 @@
 #include <CGAL/Polyhedron_items_with_id_3.h>
 #include <CGAL/bounding_box.h>
 
+#include <CGAL/function_objects.h>
+#include <CGAL/Join_input_iterator.h>
+#include <CGAL/point_generators_2.h>
+#include <CGAL/Combination_enumerator.h>
+#include <CGAL/intersections.h>
+#include <CGAL/random_convex_set_2.h>
+
 namespace MyCG
 {
     /* CGAL */
@@ -24,6 +31,10 @@ namespace MyCG
                                                                     Kernel;
     typedef Kernel::FT                                        
                                                                     FT;
+    typedef CGAL::Vector_2<Kernel>                                        
+                                                                    Vector_2;
+    typedef CGAL::Vector_3<Kernel>                                        
+                                                                    Vector_3;
     typedef CGAL::Point_2<Kernel>
                                                                     Point_2;
     typedef CGAL::Point_3<Kernel>                                   
@@ -31,7 +42,11 @@ namespace MyCG
     typedef CGAL::Segment_2<Kernel>
                                                                     Segment_2;
     typedef CGAL::Segment_3<Kernel>
-                                                                    Segment_3;                                                                
+                                                                    Segment_3;  
+    typedef CGAL::Line_2<Kernel>
+                                                                    Line_2;
+    typedef CGAL::Line_3<Kernel>
+                                                                    Line_3;                                                        
     typedef CGAL::Vector_3<Kernel>                                  
                                                                     Vector;
     typedef CGAL::Polyhedron_3<Kernel,CGAL::Polyhedron_items_with_id_3>
@@ -40,6 +55,8 @@ namespace MyCG
                                                                     Bbox_3;                            
     typedef Kernel::Iso_rectangle_2                                    
                                                                     Bbox_2;
+    typedef CGAL::Combination_enumerator<int>            
+                                                                    Combination;
 
     /* OpenGL */
     typedef std::vector<float> 

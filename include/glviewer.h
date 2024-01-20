@@ -25,6 +25,8 @@ class glViewer : public CGAL::QGLViewer
             typedef MyCG::Point_3           Point_3;
             typedef MyCG::Vector            Vector;
             typedef MyCG::Polyhedron        Polyhedron;
+            typedef MyCG::Segment_2         Segment_2;
+            typedef MyCG::Segment_3         Segment_3;
 
             typedef MyCG::DataF             DataF;
             typedef MyCG::DataI             DataI;
@@ -32,6 +34,8 @@ class glViewer : public CGAL::QGLViewer
             typedef MyCG::DataPoints_3      DataPoints_3;
             typedef MyCG::DataSegments_2    DataSegments_2;
             typedef MyCG::DataSegments_3    DataSegments_3;
+
+            typedef MyCG::Combination       Combination;
 
             typedef MyCG::Model             Model;
         /// @}
@@ -51,18 +55,32 @@ class glViewer : public CGAL::QGLViewer
         /// @}
         /// @name Operations of model
         /// @{ 
+            /* Generation */
             void generate_points();
+            void generate_segments_from_points();
+            void generate_segments_on_circle();
+            void generate_convexhulls();
+
+            // Convexhull
             void convexhull();
             void convexhull_ee();
             void convexhull_jarvis_march();
             void convexhull_graham_scan();
             void convexhull_divide_and_conquer();
+
+            // Intersection
+            void interval();
+            void segments_intersection_2();
+            void convexhulls_intersection();
+
             void clean();
         /// @}
         /// @name Operations
         /// @{ 
             bool load_file(const std::string& filename);
             bool load_file_off(const std::string& filename);
+            bool load_file_off2(const std::string& filename);
+            bool load_file_int(const std::string& filename);
             void adjustCamera();
         /// @}
         /// @name Access
@@ -70,6 +88,9 @@ class glViewer : public CGAL::QGLViewer
         /// @}
         /// @name Inquiry
         /// @{
+            int Get_Intersection_Num_Segments();
+            int Get_Intersection_Num_Points();
+            int Get_Intersection_Num_Intervals();
             int Get_Points2_Num_Vertices();
             int Get_Mesh_Num_Vertices();
             int Get_Mesh_Num_Facets();
@@ -108,8 +129,8 @@ class glViewer : public CGAL::QGLViewer
         /// @name Private Operations
         /// @{
             void initializeGL();
-            void points_data_to_display(DataPoints_2 const& rpoints);
-            void segments_data_to_display(DataSegments_2 const& rsegments);
+            void points_data_to_display(DataPoints_2 const& rpoints, DataF& dis_points);
+            void segments_data_to_display(DataSegments_2 const& rsegments, DataF& loc_segments_vertex);
         /// @}
         /// @name Private Access
         /// @{

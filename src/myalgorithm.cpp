@@ -2,25 +2,72 @@
 #include <iostream>
 #include <vector>
 #include <stack>
+#include <queue>
+#include <set>
 #include <algorithm>
+#include <iterator>
 
 namespace MyCG
 {
+    double crossProduct(const Point_2& p1, const Point_2& p2, const Point_2& p3)
+    {
+        return (p2.x() - p1.x()) * (p3.y() - p2.y()) - (p2.y() - p1.y()) * (p3.x() - p2.x());
+    }
+
+    double dotProduct(const Point_2& p1, const Point_2& p2, const Point_2& p3)
+    {
+        return (p2.x() - p1.x()) * (p3.x() - p2.x()) + (p2.y() - p1.y()) * (p3.y() - p2.y());
+    }
+
+    double crossProduct(const Point_2& p1, const Point_2& p2)
+    {
+        return p1.x() * p2.y() - p1.y() * p2.x();
+    }
+
+    double Norm(const Point_2& p)
+    {
+        return std::sqrt(p.x() * p.x() + p.y() * p.y());
+    }
+
+    double Norm2(const Point_2& p)
+    {
+        return p.x() * p.x() + p.y() * p.y();
+    }
+
+    bool between(const Point_2& p1, const Point_2& p2, const Point_2& p3)
+    {
+        return GTZERO(dotProduct(p1,p2,p3));
+    }
+
     bool ToLeft(const Point_2& p1, const Point_2& p2, const Point_2& p3)
     {
-        return (p2.x() - p1.x()) * (p3.y() - p2.y()) - (p2.y() - p1.y()) * (p3.x() - p2.x()) > 0;
+        double area2 = crossProduct(p1,p2,p3);
+        if(GTZERO(area2)) return true;
+        else if(LTZERO(area2)) return false;
+        return between(p1,p2,p3);
+    }
+
+    bool ToRight(const Point_2& p1, const Point_2& p2, const Point_2& p3)
+    {
+        double area2 = crossProduct(p1,p2,p3);
+        if(LTZERO(area2)) return true;
+        else if(GTZERO(area2)) return false;
+        return between(p1,p2,p3);
     }
 
     bool InTriangle(const Point_2& p1, const Point_2& p2, const Point_2& p3, const Point_2& p)
     {
-        return (ToLeft(p1,p2,p) && ToLeft(p2,p3,p) && ToLeft(p3,p1,p)) || (!ToLeft(p1,p2,p) && !ToLeft(p2,p3,p) && !ToLeft(p3,p1,p));
+        bool p1p2l = ToLeft(p1,p2,p), p1p2r = ToRight(p1,p2,p);
+        bool p2p3l = ToLeft(p2,p3,p), p2p3r = ToRight(p2,p3,p);
+        bool p3p1l = ToLeft(p3,p1,p), p3p1r = ToRight(p3,p1,p);
+        return (p1p2l == p2p3l && p2p3l == p3p1l) || (p1p2r == p2p3r && p2p3r == p3p1r);
     }
 
     bool sort_vertex_by_xy(const Point_2& pp1, const Point_2& pp2)
     {
-        if(pp1.x() >= pp2.x())
+        if(GTEQZERO(pp1.x() - pp2.x()))
         {
-            if(pp1.x() != pp2.x() || pp1.y() > pp2.y())
+            if(!(EQZERO(pp1.x() - pp2.x())) || GTZERO(pp1.y() - pp2.y()))
                 return false; 
             return true;
         }
@@ -29,9 +76,9 @@ namespace MyCG
 
     bool sort_vertex_by_yx(const Point_2& pp1, const Point_2& pp2)
     {
-        if(pp1.y() >= pp2.y())
+        if(GTEQZERO(pp1.y() - pp2.y()))
         {
-            if(pp1.y() != pp2.y() || pp1.x() > pp2.x())
+            if(!(EQZERO(pp1.y() - pp2.y())) || GTZERO(pp1.x() - pp2.x()))
                 return false; 
             return true;
         }
@@ -43,9 +90,9 @@ namespace MyCG
         int index = begin;
         for(int i=begin+1;i<rpoints.size();++i)
         {
-            if(rpoints[i].x() < rpoints[index].x())
+            if(LTZERO(rpoints[i].x() - rpoints[index].x()))
                 index = i;
-            else if(rpoints[i].x() == rpoints[index].x() && rpoints[i].y() < rpoints[index].y())
+            else if(EQZERO(rpoints[i].x() - rpoints[index].x()) && LTZERO(rpoints[i].y() - rpoints[index].y()))
                 index = i;
         }
         return index;
@@ -70,9 +117,9 @@ namespace MyCG
         p0 = rpoints[0];
         for(int i=0;i<rpoints.size();++i)
         {
-            if(rpoints[i].x() < p0.x())
+            if(LTZERO(rpoints[i].x() - p0.x()))
                 p0 = rpoints[i];
-            else if(rpoints[i].x() == p0.x() && rpoints[i].y() < p0.y())
+            else if(EQZERO(rpoints[i].x() - p0.x()) && LTZERO(rpoints[i].y() - p0.y()))
                 p0 = rpoints[i];
         }
     }
@@ -86,6 +133,28 @@ namespace MyCG
         if(ToLeft(p0,p1,p2))
             return true;
         return false;
+    }
+
+    bool Sort_Vertex_by_XY::operator()(const Point_2& p1, const Point_2& p2)
+    {
+        if(GTEQZERO(p1.x() - p2.x()))
+        {
+            if(!(EQZERO(p1.x() - p2.x())) || GTZERO(p1.y() - p2.y()))
+                return false; 
+            return true;
+        }
+        return true;
+    }
+
+    bool Sort_Vertex_by_YX::operator()(const Point_2& p1, const Point_2& p2)
+    {
+        if(GTEQZERO(p1.y() - p2.y()))
+        {
+            if(!(EQZERO(p1.y() - p2.y())) || GTZERO(p1.x() - p2.x()))
+                return false; 
+            return true;
+        }
+        return true;
     }
 
     DataSegments_2 ConvexHull_2::ConvexHull_2_TriMethod(const DataPoints_2& rpoints)
@@ -122,12 +191,10 @@ namespace MyCG
 
         // 3. Construct convex hull
         DataSegments_2 convexhull_lines;
-        std::cout << "Total extrem points: " << convexhull.size() << std::endl;
         DataPoints_2    convexhull_points;
         for(int i=0;i<convexhull.size();++i)
             convexhull_points.push_back(points[convexhull[i]]);
         Sort_Vertex_by_Angle::SetP0(convexhull_points);
-        std::cout << "P0: " << Sort_Vertex_by_Angle::GetP0() << std::endl;
         std::sort(convexhull_points.begin(),convexhull_points.end(),Sort_Vertex_by_Angle());   
         for(int i=0;i<convexhull.size()-1;i++)
             convexhull_lines.push_back(Segment_2(convexhull_points[i],convexhull_points[i+1]));
@@ -144,15 +211,18 @@ namespace MyCG
         for(int i=0;i<points.size();++i)
             for(int j=i+1;j<points.size();++j)
             {
-                int flag = 0;
-                for(int k=0;k<points.size();++k)
+                bool leftfree = true, rightfree = true;
+                for(int k=0;k<points.size() && (leftfree || rightfree);++k)
                 {
-                    if(k == i || k == j)
-                        continue;
-                    if(ToLeft(points[i],points[j],points[k]))
-                        flag ++;
+                    if(k!=i && k != j)
+                    {
+                        if(ToLeft(points[i],points[j],points[k]) || ToRight(points[j],points[i],points[k]))
+                            leftfree = false;
+                        if(ToRight(points[i],points[j],points[k]) || ToLeft(points[j],points[i],points[k]))
+                            rightfree = false;
+                    }
                 }
-                if(flag==points.size()-2 || flag==0)
+                if(leftfree || rightfree)
                     convexhull_lines.push_back(Segment_2(points[i],points[j]));
             }
         return convexhull_lines;
@@ -238,9 +308,9 @@ namespace MyCG
             int LTL = begin;
             for(int i=begin+1;i<=end;++i)
             {
-                if(rpoints[i].x() < rpoints[LTL].x())
+                if(LTZERO(rpoints[i].x() - rpoints[LTL].x()))
                     LTL = i;
-                else if(rpoints[i].x() == rpoints[LTL].x() && rpoints[i].y() < rpoints[LTL].y())
+                else if(EQZERO(rpoints[i].x() - rpoints[LTL].x()) && LTZERO(rpoints[i].y() - rpoints[LTL].y()))
                     LTL = i;
             }
             int i=LTL, cnt = 0;
@@ -408,4 +478,316 @@ namespace MyCG
         convexhull_lines.push_back(Segment_2(points[convexhull_points[end]],points[convexhull_points[0]]));
         return convexhull_lines;
     }
+
+    bool Intersection_2::CMP_Point_LR_X::operator()(const Point_LR& p1, const Point_LR& p2)
+    {
+        if(GTZERO(p1.point.x() - p2.point.x())) return false;
+        else return true;
+    }
+
+    bool Intersection_2::CMP_Point_LR_Y::operator()(const Point_LR& p1, const Point_LR& p2)
+    {
+        if(GTZERO(p1.point.y() - p2.point.y())) return false;
+        else return true;
+    }
+
+    bool Intersection_2::CMP_pSegment_LR_Y::operator()(const Segment_LR* s1, const Segment_LR* s2) const
+    {
+        if(GTEQZERO(s1->height - s2->height)) return false;
+        else return true;
+    }
+
+    bool Intersection_2::CMP_Point_LR_XY::operator()(const Point_LR& p1, const Point_LR& p2)
+    {
+        if(GTZERO(p1.point.x() - p2.point.x()))
+        {
+            if(!EQZERO(p1.point.x() - p2.point.x()) || GTZERO(p1.point.y() - p2.point.y()))
+                return false;
+            return true;
+        }
+        return true;
+    }
+
+    bool Intersection_2::CMP_Point_LR_YX::operator()(const Point_LR& p1, const Point_LR& p2)
+    {
+        if(GTZERO(p1.point.y() - p2.point.y()))
+        {
+            if(!EQZERO(p1.point.y() - p2.point.y()) || GTZERO(p1.point.x() - p2.point.x()))
+                return false;
+            return true;
+        }
+        return true;
+    }
+
+    bool Intersection_2::CMP_Point_LR_XY_Greater::operator()(const Point_LR& p1, const Point_LR& p2)
+    {
+        if(GTZERO(p2.point.x() - p1.point.x()))
+        {
+            if(!EQZERO(p1.point.x() - p2.point.x()) || GTZERO(p2.point.y() - p1.point.y()))
+                return false;
+            return true;
+        }
+        return true;
+    }
+
+    bool Intersection_2::CMP_Segment_Y_Greater::operator()(const Segment_2& s1, const Segment_2& s2)
+    {
+        Point_2 p1 = GTZERO(s1.source().y()-s1.target().y())? s1.source() : s1.target();
+        Point_2 p2 = GTZERO(s2.source().y()-s2.target().y())? s2.source() : s2.target();
+        if(GTEQZERO(p1.y()-p2.y())) return false;
+        else return true;
+    }
+
+    bool Intersection_2::CMP_Segment_Y_Less::operator()(const Segment_2& s1, const Segment_2& s2)
+    {
+        Point_2 p1 = GTZERO(s1.source().y()-s1.target().y())? s1.source() : s1.target();
+        Point_2 p2 = GTZERO(s2.source().y()-s2.target().y())? s2.source() : s2.target();
+        if(LTEQZERO(p2.y()-p1.y())) return false;
+        else return true;
+    }
+
+    bool Intersection_2::Is_Intersection_Segments(const Segment_LR& rsegment1, const Segment_LR& rsegment2)
+    {
+        Point_2& s1l = rsegment1.left->point, &s1r = rsegment1.right->point;
+        Point_2& s2l = rsegment2.left->point, &s2r = rsegment2.right->point;
+        /* mutex test */
+        if(std::min(s1l.x(),s1r.x()) > std::max(s2l.x(),s2r.x()) || std::min(s2l.x(),s2r.x()) > std::max(s1l.x(),s1r.x()) || 
+           std::min(s1l.y(),s1r.y()) > std::max(s2l.y(),s2r.y()) || std::min(s2l.y(),s2r.y()) > std::max(s1l.y(),s1r.y()))
+            return false;
+
+        /* intersection test*/
+        if(ToLeft(s1l,s1r,s2l) && !ToRight(s1l,s1r,s2l) && ToRight(s1l, s1r, s2r) && !ToLeft(s1l, s1r, s2r)
+            && ToLeft(s2l,s2r,s1r) && !ToRight(s2l,s2r,s1r) && ToRight(s2l, s2r, s1l) && !ToLeft(s2l, s2r, s1l))
+            return true;
+        else if(ToLeft(s1l,s1r,s2r) && !ToRight(s1l,s1r,s2r) && ToRight(s1l, s1r, s2l) && !ToLeft(s1l, s1r, s2l)
+            && ToLeft(s2l,s2r,s1l) && !ToRight(s2l,s2r,s1l) && ToRight(s2l, s2r, s1r) && !ToLeft(s2l, s2r, s1r))
+            return true;
+        else 
+            return false;
+    }
+
+    Point_2 Intersection_2::Intersection_Segments(const Segment_LR& rsegment1, const Segment_LR& rsegment2)
+    {
+        Vector_2 va01(rsegment1.left->point.x(),rsegment1.left->point.y()), vb01(rsegment1.right->point.x(),rsegment1.right->point.y());
+        Vector_2 va02(rsegment2.left->point.x(),rsegment2.left->point.y()), vb02(rsegment2.right->point.x(),rsegment2.right->point.y());
+        double t = CGAL::determinant(vb01-va01,va02-va01) / (CGAL::determinant(vb01-va01,vb02-va02));
+        Vector_2 result1 = va02 - t * (vb02-va02);
+        return Point_2(result1.x(),result1.y());
+    }
+
+    DataSegments_2 Intersection_2::Interval(const DataSegments_2& segments)
+    {
+        struct Point_LR
+        {
+            Point_2     point;
+            bool        is_left;
+            Segment_2*  segment = nullptr;
+        };
+        class Point_LR_comparator
+        {
+            public:
+                bool operator()(const Point_LR& p1, const Point_LR& p2)
+                {
+                    if(LTZERO(p1.point.x() - p2.point.x()))
+                        return true;
+                    else
+                        return false;
+                }
+        };
+
+        std::vector<Point_LR>   points;
+        for(int i=0;i<segments.size();++i)
+        {
+            Point_2 p1,p2;
+            p1 = segments[i].source();
+            p2 = segments[i].target();
+            if(GTZERO(p1.x() - p2.x()))
+            {
+                points.push_back(Point_LR{p2,true});
+                points.push_back(Point_LR{p1,false});
+            }
+            else
+            {
+                points.push_back(Point_LR{p1,true});
+                points.push_back(Point_LR{p2,false});
+            }
+        }
+        std::sort(points.begin(),points.end(),Point_LR_comparator());
+    
+        int intercnt = 0;
+        std::stack<int>     left_stack;
+        DataSegments_2  inter_segments;
+        for(int i=0;i<points.size();++i)
+        {
+            if(points[i].is_left)
+            {
+                left_stack.push(i);
+            }
+            else
+            {
+                if(left_stack.size() == 1)
+                    left_stack.pop();
+                else 
+                {
+                    Point_2 p1(points[left_stack.top()].point.x(), intercnt * 0.1 + 0.1);
+                    Point_2 p2(points[i].point.x(), intercnt * 0.1 + 0.1);
+                    inter_segments.push_back(Segment_2(p1,p2));
+                    left_stack.pop();
+                    intercnt++;
+                }
+            }
+        }
+        return inter_segments;
+    }
+
+    DataPoints_2 Intersection_2::Intersection(const DataSegments_2& rsegments)
+    {
+        std::vector<Point_LR>   points_lr(rsegments.size()*2);
+        std::vector<Segment_LR> segments_lr(rsegments.size());
+        std::set<Segment_LR*, CMP_pSegment_LR_Y>  status;
+        for(int i=0,j=0;i<rsegments.size();++i,j+=2)
+        {
+            Point_2 p1,p2;
+            p1 = rsegments[i].point(0);
+            p2 = rsegments[i].point(1);
+            if(GTZERO(p1.x() - p2.x()))
+            {
+                points_lr[j]  =Point_LR{p2, LEFT, nullptr};
+                points_lr[j+1]=Point_LR{p1, RIGHT, nullptr};
+            }
+            else
+            {
+                points_lr[j]  =Point_LR{p1, LEFT, nullptr};
+                points_lr[j+1]=Point_LR{p2, RIGHT, nullptr};
+            }
+            segments_lr[i] = Segment_LR(&(points_lr[j]), &(points_lr[j+1]), points_lr[j].point.y());
+            points_lr[j].segment = &segments_lr[i];
+            points_lr[j+1].segment = &segments_lr[i];
+        }
+
+        std::priority_queue<Point_LR, std::vector<Point_LR>, CMP_Point_LR_XY_Greater>  event_queue;
+        for(auto point:points_lr)
+            event_queue.push(point);
+
+        DataPoints_2    intersection_points;
+        while(!event_queue.empty())
+        {
+            Point_LR event = event_queue.top();
+            event_queue.pop();
+            if(event.type == LEFT)
+            {
+                Segment_LR& segment = *(event.segment);
+                for(auto seg:status)
+                {
+                    Segment_LR& segment2 = *seg;
+                    if(Is_Intersection_Segments(segment,segment2))
+                    {
+                        Point_2 p = Intersection_Segments(segment,segment2);
+                        event_queue.push(Point_LR{p, INTERSECTION,
+                            GTZERO(segment.height-segment2.height)? &segment:&segment2});
+                        intersection_points.push_back(p);
+                    }
+                }
+                status.insert(&segment);
+            }
+            else if(event.type == INTERSECTION)
+            {
+                auto it = status.find(event.segment);
+                auto it_prev = it;
+                double height = (*it)->height;
+                auto it_succ = --it;
+                Segment_LR* segment = *it_prev, *segment2 = *it_succ;
+                status.erase(segment);
+                status.erase(segment2);
+                segment->height = event.point.y()-2*1e-5;
+                segment2->height = event.point.y()+2*1e-5;
+                status.insert(segment);
+                status.insert(segment2);
+            }
+            else
+                status.erase(event.segment);
+        }
+        return intersection_points;
+    }
+
+    bool Intersection_2::Is_Monotonechain_Edge_Intersect(const DataPoints_2& chain1, int left1, int right1,
+                                                         const DataPoints_2& chain2, int left2, int right2)
+    {
+        if(std::max(right1-left1, right2-left2) < 2) 
+            return Is_Intersection_Segments(chain1[left1],chain2[left2]);
+
+        int mid1l = (left1 + right1) / 2, mid1r = (left1 + right1) / 2 + 1;  
+        int mid2l = (left2 + right2) / 2, mid2r = (left2 + right2) / 2 + 1;
+
+        Line_2 l1(mid1l,mid1r), l2(mid2l,mid2r);
+        Point_2 intersection_point;
+        const auto intersection = CGAL::intersection(l1,l2);
+        if(intersection)
+        {
+            if(const Point_2* pinter_point = boost::get<Point_2>(&*intersection))
+            {
+                
+            }
+            else
+                return false;
+        }
+        else
+            return false;
+
+    }
+
+    bool Intersection_2::ConvexHull_Intersection(DataPoints_2& convexhull_intersection_points, 
+                                                 DataSegments_2& convexhull_intersection_segments, 
+                                                 const DataPoints_2& rpoints,
+                                                 const DataSegments_2& rsegments)
+    {
+        /**
+         * 1. Default generate 7 convexhulls that contain 30 points 
+         * 2. Prepare monotonechains for intersection test
+         * */
+        std::vector<DataPoints_2> convexhulls(7);
+        std::vector<DataPoints_2> monotonechains(14);
+        for(int i=0;i<7;++i)
+        {
+            /* The Generation ConvexHull points are sorted anticlockwise */
+            for(int begin=i*30;begin<30*(i+1);++begin)
+                convexhulls[i].push_back(rpoints[begin]);     
+
+            std::cout << "Convexhull :" << i << std::endl;
+            for(int j=0;j<convexhulls[i].size();++j)
+                std::cout << convexhulls[i][j] << std::endl;
+            auto max = std::max_element(convexhulls[i].begin(),convexhulls[i].end(),
+                                        [](const Point_2& p1, const Point_2& p2)->bool{
+                                            if(GTEQZERO(p1.y() - p2.y())) return false;
+                                            else return true;
+                                        });
+            auto min = std::min_element(convexhulls[i].begin(),convexhulls[i].end(),
+                                        [](const Point_2& p1, const Point_2& p2)->bool{
+                                            if(LTEQZERO(p2.y() - p1.y())) return false;
+                                            else return true;
+                                        });
+
+            /* monotonechain is ordered in left-right order */
+            auto iter = max;
+            do
+            {
+                monotonechains[2*i].push_back(*iter);
+                iter++;
+                if(iter == convexhulls[i].end())
+                    iter = convexhulls[i].begin();
+            } while (iter!=min);
+            
+            iter = min;
+            do{
+                monotonechains[2*i+1].push_back(*iter);
+                iter++;
+                if(iter==convexhulls[i].end())
+                    iter = convexhulls[i].begin();
+            }while(iter!=max);
+        }  
+
+        
+        return true;
+    }
+
 }

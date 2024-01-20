@@ -83,6 +83,40 @@
                 m_information->setPlainText(QString::fromStdString(info));
             }   
         }
+        else if(suffix == "off2")
+        {
+            std::string info = "Loading file: " + filename.toStdString() + "\n";
+            m_information->setPlainText(QString::fromStdString(info));
+            if(m_glviewer->load_file_off2(filename.toStdString()))
+            {
+                std::string info = "File [ " + filename.toStdString() + " ] loaded.\n";
+                std::string details = "  Load Points with " + std::to_string(m_glviewer->Get_Points2_Num_Vertices()) 
+                                    + " vertices \n";
+                m_information->setPlainText(QString::fromStdString(info+details));    
+            }
+            else
+            {
+                std::string info = "Failed load File [ " + filename.toStdString() + " ]!\n";
+                m_information->setPlainText(QString::fromStdString(info));
+            }  
+        }
+        else if(suffix == "int")
+        {
+            std::string info = "Loading file: " + filename.toStdString() + "\n";
+            m_information->setPlainText(QString::fromStdString(info));
+            if(m_glviewer->load_file_int(filename.toStdString()))
+            {
+                std::string info = "File [ " + filename.toStdString() + " ] loaded.\n";
+                std::string details = "  Load Points with " + std::to_string(m_glviewer->Get_Intersection_Num_Points()) 
+                                    + " vertices \n";
+                m_information->setPlainText(QString::fromStdString(info+details));    
+            }
+            else
+            {
+                std::string info = "Failed load File [ " + filename.toStdString() + " ]!\n";
+                m_information->setPlainText(QString::fromStdString(info));
+            }   
+        }
         else
         {
             QMessageBox::warning(this, tr("Error"), tr("File format not supported"));
@@ -104,12 +138,32 @@
         update();
     }
 
+    /* Generation */
     void MainWindow::on_actionPoints_triggered()
     {
         m_glviewer->generate_points();
         update();
     }
 
+    void MainWindow::on_actionOn_Circle_triggered()
+    {
+        m_glviewer->generate_segments_on_circle();
+        update();
+    }
+
+    void MainWindow::on_actionFrom_points_triggered()
+    {
+        m_glviewer->generate_segments_from_points();
+        update();
+    }
+
+    void MainWindow::on_actionConvexHulls_triggered()
+    {
+        m_glviewer->generate_convexhulls();
+        update();
+    }
+
+    // ConvexHull
     void MainWindow::on_actionConvexHull_EP_triggered()
     {
         m_glviewer->convexhull();
@@ -137,6 +191,25 @@
     void MainWindow::on_actionConvexHull_Divide_and_Conquer_2_triggered()
     {
         m_glviewer->convexhull_divide_and_conquer();
+        update();
+    }
+
+    // Intersection
+    void MainWindow::on_actionInterval_triggered()
+    {
+        m_glviewer->interval();
+        update();
+    }
+
+    void MainWindow::on_actionSegments_2_triggered()
+    {
+        m_glviewer->segments_intersection_2();
+        update();
+    }
+
+    void MainWindow::on_actionConvexHull_2_triggered()
+    {
+        m_glviewer->convexhulls_intersection();
         update();
     }
 

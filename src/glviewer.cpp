@@ -54,7 +54,7 @@
         if(m_model->load_file_off(filename))
         {
             DataPoints_2& points_2 = m_model->Get_DataPoints_2();
-            points_data_to_display(points_2);
+            points_data_to_display(points_2, m_gl_display->Get_pos_points());
             m_model->flip_empty();
             adjustCamera();
             m_gl_display->check_buffer();
@@ -64,75 +64,49 @@
             return false;
     }
 
-    void glViewer::generate_points()
+    bool glViewer::load_file_off2(const std::string& filename)
     {
         m_model->clean();
         m_gl_display->setdisplaymode(0);
-        m_model->generate_points();
-        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
-        points_data_to_display(points_2);
-        m_model->flip_empty();
-        adjustCamera();
-        m_gl_display->check_buffer();
+        m_gl_display->setdisplaymode(2);
+        if(m_model->load_file_off2(filename))
+        {
+            DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+            DataSegments_2& segments_2 = m_model->Get_DataSegments_2();
+            points_data_to_display(points_2, m_gl_display->Get_pos_points());
+            segments_data_to_display(segments_2, m_gl_display->Get_pos_segments());
+            m_model->flip_empty();
+            adjustCamera();
+            m_gl_display->check_buffer();
+            return true;
+        }
+        else
+            return false;
     }
 
-    void glViewer::convexhull()
+    bool glViewer::load_file_int(const std::string& filename)
     {
-        m_gl_display->setdisplaymode(1);
-        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
-        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_TriMethod(points_2);
-        segments_data_to_display(convexsegments);
-        m_model->flip_empty();
-        adjustCamera();
-        m_gl_display->check_buffer();
+        m_model->clean();
+        m_gl_display->setdisplaymode(2);
+        m_gl_display->setdisplaymode(3);
+        if(m_model->load_file_int(filename))
+        {
+            DataPoints_2& points_2 = m_model->Get_Intersection_Points();
+            DataSegments_2& segments_2 = m_model->Get_Intersection_Segments();
+            points_data_to_display(points_2, m_gl_display->Get_pos_intersection_points());
+            segments_data_to_display(segments_2, m_gl_display->Get_pos_intersection_lines());
+            m_model->flip_empty();
+            adjustCamera();
+            m_gl_display->check_buffer();
+            return true;
+        }
+        else
+            return false;
     }
 
-    void glViewer::convexhull_ee()
+    void glViewer::adjustCamera() 
     {
-        m_gl_display->setdisplaymode(1);
-        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
-        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_EE(points_2);
-        segments_data_to_display(convexsegments);
-        m_model->flip_empty();
-        adjustCamera();
-        m_gl_display->check_buffer();
-    }
-
-    void glViewer::convexhull_jarvis_march()
-    {
-        m_gl_display->setdisplaymode(1);
-        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
-        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_Jarvis_March(points_2);
-        segments_data_to_display(convexsegments);
-        m_model->flip_empty();
-        adjustCamera();
-        m_gl_display->check_buffer();
-    }
-
-    void glViewer::convexhull_graham_scan()
-    {
-        m_gl_display->setdisplaymode(1);
-        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
-        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_Graham_Scan(points_2);
-        segments_data_to_display(convexsegments);
-        m_model->flip_empty();
-        adjustCamera();
-        m_gl_display->check_buffer();
-    }
-
-    void glViewer::convexhull_divide_and_conquer()
-    {
-        m_gl_display->setdisplaymode(1);
-        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
-        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_Divide_and_Conquer(points_2);
-        segments_data_to_display(convexsegments);
-        m_model->flip_empty();
-        adjustCamera();
-        m_gl_display->check_buffer();
-    }   
-
-    void glViewer::adjustCamera() {
-        m_model->calculate_Bbox();
+        m_model->calculate_Bbox_2();
         Point_3& center = m_model->Get_Center();
         double radius = m_model->Get_Radius();
         setSceneCenter(CGAL::qglviewer::Vec(center.x(), center.y(), center.z()));
@@ -145,6 +119,161 @@
         m_model->clean();
         m_gl_display->clean();
     }
+
+    // Gernerator
+    void glViewer::generate_points()
+    {
+        m_model->clean();
+        m_gl_display->setdisplaymode(0);
+        m_model->generate_points();
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        points_data_to_display(points_2, m_gl_display->Get_pos_points());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::generate_segments_from_points()
+    {
+        m_gl_display->setdisplaymode(2);
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        std::cout << "Number of points: " << points_2.size() << std::endl;
+        Combination combination = m_model->generate_segments_from_points();
+        DataSegments_2& segments_2 = m_model->Get_DataSegments_2();
+        for(int i=0;i<combination.number_of_elements()-1;i+=2)
+            segments_2.push_back(Segment_2(points_2[combination[i]], points_2[combination[i+1]]));
+        std::cout << "Number of segments: " << segments_2.size() << std::endl;
+        segments_data_to_display(segments_2, m_gl_display->Get_pos_segments());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::generate_segments_on_circle()
+    {
+        m_model->clean();
+        m_gl_display->setdisplaymode(5);
+        m_model->generate_segments_on_circle();
+        DataSegments_2& segments_2 = m_model->Get_Intersection_Segments();
+        segments_data_to_display(segments_2, m_gl_display->Get_pos_intersection_lines());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::generate_convexhulls()
+    {
+        clean();
+        for(int i=7;i<9;i++)
+            m_gl_display->setdisplaymode(i);
+        
+        m_model->generate_convexhulls();
+        DataPoints_2& points_2 = m_model->Get_Generation_ConvexHull_Points();
+        DataSegments_2& segments_2 = m_model->Get_Generation_ConvexHull_Segments();
+        points_data_to_display(points_2, m_gl_display->Get_pos_generation_convexhull_points());
+        segments_data_to_display(segments_2, m_gl_display->Get_pos_generation_convexhull_lines());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    // Convexhull
+    void glViewer::convexhull()
+    {
+        m_gl_display->setdisplaymode(1);
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_TriMethod(points_2);
+        segments_data_to_display(convexsegments,m_gl_display->Get_pos_segments());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::convexhull_ee()
+    {
+        m_gl_display->setdisplaymode(1);
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_EE(points_2);
+        segments_data_to_display(convexsegments,m_gl_display->Get_pos_segments());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::convexhull_jarvis_march()
+    {
+        m_gl_display->setdisplaymode(1);
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_Jarvis_March(points_2);
+        segments_data_to_display(convexsegments, m_gl_display->Get_pos_segments());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::convexhull_graham_scan()
+    {
+        m_gl_display->setdisplaymode(1);
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_Graham_Scan(points_2);
+        segments_data_to_display(convexsegments, m_gl_display->Get_pos_segments());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::convexhull_divide_and_conquer()
+    {
+        m_gl_display->setdisplaymode(1);
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_Divide_and_Conquer(points_2);
+        segments_data_to_display(convexsegments,  m_gl_display->Get_pos_segments());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }   
+
+    // Intersection
+    void glViewer::interval()
+    {
+        for(int i=4;i<6;++i)
+            m_gl_display->setdisplaymode(i);
+        DataSegments_2& segments_2 = m_model->Get_Intersection_Segments();
+        DataSegments_2 interval = MyCG::Intersection_2::Interval(segments_2);
+        segments_data_to_display(interval, m_gl_display->Get_pos_intersection_interval());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::segments_intersection_2()
+    {
+        m_gl_display->setdisplaymode(3);
+        DataSegments_2& segments_2 = m_model->Get_DataSegments_2();
+        DataPoints_2 intersection_points = MyCG::Intersection_2::Intersection(segments_2);
+        points_data_to_display(intersection_points, m_gl_display->Get_pos_generation_intersection_points());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::convexhulls_intersection()
+    {
+        for(int i=8;i<11;i++)
+            m_gl_display->setdisplaymode(i);
+        DataPoints_2& generate_points_2 = m_model->Get_Generation_ConvexHull_Points();
+        DataSegments_2& generate_segments_2 = m_model->Get_Generation_ConvexHull_Segments();
+        DataPoints_2& intersection_points_2 = m_model->Get_Intersection_ConvexHull_Points();
+        DataSegments_2& intersection_segments_2 = m_model->Get_Intersection_ConvexHull_Segments();
+        MyCG::Intersection_2::ConvexHull_Intersection(intersection_points_2, intersection_segments_2,
+                                                      generate_points_2, generate_segments_2);
+        points_data_to_display(intersection_points_2, m_gl_display->Get_pos_intersection_convexhull_points());
+        segments_data_to_display(intersection_segments_2, m_gl_display->Get_pos_intersection_convexhull());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
 /// @}
 
 /// @name Access
@@ -153,6 +282,9 @@
 
 /// @name Inquiry
 /// @{
+    int glViewer::Get_Intersection_Num_Segments() { return m_model->Get_Intersection_Num_Segments(); }
+    int glViewer::Get_Intersection_Num_Points() { return m_model->Get_Intersection_Num_Points(); }
+    int glViewer::Get_Intersection_Num_Intervals() { return m_model->Get_Intersection_Num_Intervals(); }
     int glViewer::Get_Points2_Num_Vertices() { return m_model->Get_Points2_Num_Vertices(); }
     int glViewer::Get_Mesh_Num_Vertices() { return m_model->Get_Mesh_Num_Vertices();}
     int glViewer::Get_Mesh_Num_Facets() { return m_model->Get_Mesh_Num_Facets(); }
@@ -203,9 +335,8 @@
         setSceneRadius(2.0);
     }
 
-    void glViewer::points_data_to_display(DataPoints_2 const& rpoints)
+    void glViewer::points_data_to_display(DataPoints_2 const& rpoints, DataF& dis_points)
     {
-        DataF& dis_points = m_gl_display->Get_pos_points();
         dis_points.resize(3*rpoints.size());
         for(int i=0;i<rpoints.size();++i)
         { 
@@ -215,9 +346,8 @@
         }
     }
 
-    void glViewer::segments_data_to_display(DataSegments_2 const& rsegments)
+    void glViewer::segments_data_to_display(DataSegments_2 const& rsegments, DataF& loc_segments_vertex)
     {
-        DataF& loc_segments_vertex = m_gl_display->Get_pos_segments();
         loc_segments_vertex.resize(6*rsegments.size());
         for(int i=0;i<rsegments.size();++i)
         {
@@ -229,6 +359,7 @@
             loc_segments_vertex[6*i+5] = 0.0f;
         }
     }
+
 /// @}
 
 /// @name Private Access

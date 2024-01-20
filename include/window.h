@@ -29,13 +29,24 @@ protected:
 
         void on_actionClear_triggered();
 
-        /* My function */
+        /* Generation */
         void on_actionPoints_triggered();
+        void on_actionOn_Circle_triggered();
+        void on_actionFrom_points_triggered();
+
+        /* My function */
+        // ConvexHull
         void on_actionConvexHull_EP_triggered();
         void on_actionConvexHull_EE_2_triggered();
         void on_actionConvexHull_Jarvis_March_2_triggered();
         void on_actionConvexHull_Graham_Scan_2_triggered();
         void on_actionConvexHull_Divide_and_Conquer_2_triggered();
+
+        // Intersection
+        void on_actionInterval_triggered();
+        void on_actionSegments_2_triggered();
+        void on_actionConvexHulls_triggered();
+        void on_actionConvexHull_2_triggered();
 };
 
 
