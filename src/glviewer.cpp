@@ -104,6 +104,27 @@
             return false;
     }
 
+    bool glViewer::load_file_chf(const std::string& filename)
+    {
+        clean();
+        for(int i=7;i<9;i++)
+            m_gl_display->setdisplaymode(i);
+        
+        if(m_model->load_file_chf(filename))
+        {
+            DataPoints_2& points_2 = m_model->Get_Generation_ConvexHull_Points();
+            DataSegments_2& segments_2 = m_model->Get_Generation_ConvexHull_Segments();
+            points_data_to_display(points_2, m_gl_display->Get_pos_generation_convexhull_points());
+            segments_data_to_display(segments_2, m_gl_display->Get_pos_generation_convexhull_lines());
+            m_model->flip_empty();
+            adjustCamera();
+            m_gl_display->check_buffer();
+            return true;
+        }
+        else
+            return false;
+    }
+
     void glViewer::adjustCamera() 
     {
         m_model->calculate_Bbox_2();
@@ -267,11 +288,9 @@
         DataSegments_2& intersection_segments_2 = m_model->Get_Intersection_ConvexHull_Segments();
         MyCG::Intersection_2::ConvexHull_Intersection(intersection_points_2, intersection_segments_2,
                                                       generate_points_2, generate_segments_2);
-        points_data_to_display(intersection_points_2, m_gl_display->Get_pos_intersection_convexhull_points());
-        segments_data_to_display(intersection_segments_2, m_gl_display->Get_pos_intersection_convexhull());
-        m_model->flip_empty();
-        adjustCamera();
-        m_gl_display->check_buffer();
+        // m_model->flip_empty();
+        // adjustCamera();
+        // m_gl_display->check_buffer();
     }
 
 /// @}

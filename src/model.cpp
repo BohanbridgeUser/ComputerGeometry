@@ -97,6 +97,59 @@ namespace MyCG
             return true;
         }
 
+        bool Model::load_file_chf(const std::string& filename)
+        {
+            clean();
+
+            std::ifstream file(filename);
+            if(!file.is_open())
+            {
+                std::cout << "Error opening file" << std::endl;
+
+                std::cout << "Default generate 2 convexhulls that contain 30 points" << std::endl;
+
+                std::ofstream file2(filename);
+                typedef CGAL::Creator_uniform_2<double, Point_2>  Creator;
+                typedef CGAL::Random_points_in_square_2<Point_2, Creator> Point_Generator;
+                CGAL::Random random;
+                for(int i=0;i<2;++i)
+                {
+                    double random_x = random.uniform_real(-1.0, 1.0);
+                    double random_y = random.uniform_real(-1.0, 1.0);
+                    CGAL::random_convex_set_2(30, std::back_inserter(m_generation_convexhull_points), Point_Generator(2.0));
+                    for(int j=i*30;j<(i+1)*30;++j)
+                        m_generation_convexhull_points[j] = Point_2(m_generation_convexhull_points[j].x() + random_x,
+                                                                    m_generation_convexhull_points[j].y() + random_y);
+                }
+                    
+                int begin = 0;
+                while(begin < 2 * 30)
+                {
+                    for(int i=begin;i<begin+29;++i)
+                    {
+                        m_generation_convexhull_segments.push_back(Segment_2(m_generation_convexhull_points[i], 
+                                                                    m_generation_convexhull_points[(i+1)]));
+                        file2 << m_generation_convexhull_segments[i] << std::endl;
+                    }
+                        
+                    m_generation_convexhull_segments.push_back(Segment_2(m_generation_convexhull_points[begin], 
+                                                                m_generation_convexhull_points[begin+29]));
+                    file2 << m_generation_convexhull_segments[begin+29] << std::endl;
+                    begin+=30;
+                }
+                return false;
+            }
+
+            double loc_x, loc_y, loc_z, loc_x2, loc_y2, loc_z2;
+            while(file >> loc_x >> loc_y >> loc_z >> loc_x2 >> loc_y2 >> loc_z2)
+            {
+                m_generation_convexhull_points.push_back(Point_2(loc_x, loc_y));
+                m_generation_convexhull_points.push_back(Point_2(loc_x2, loc_y2));
+                m_generation_convexhull_segments.push_back(Segment_2(Point_2(loc_x, loc_y), Point_2(loc_x2, loc_y2)));
+            }
+            return true;
+        }
+
         /* Generation */
         void Model::generate_points()
         {

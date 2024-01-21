@@ -32,6 +32,7 @@ namespace MyCG
                 bool load_file_off(const std::string& filename);
                 bool load_file_off2(const std::string& filename);
                 bool load_file_int(const std::string& filename);
+                bool load_file_chf(const std::string& filename);
                 void clean();
 
                 /* Generation */
