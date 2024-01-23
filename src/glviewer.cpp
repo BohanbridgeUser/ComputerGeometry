@@ -112,6 +112,7 @@
         
         if(m_model->load_file_chf(filename))
         {
+            std::cout << "open chf file !\n";
             DataPoints_2& points_2 = m_model->Get_Generation_ConvexHull_Points();
             DataSegments_2& segments_2 = m_model->Get_Generation_ConvexHull_Segments();
             points_data_to_display(points_2, m_gl_display->Get_pos_generation_convexhull_points());

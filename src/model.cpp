@@ -30,6 +30,12 @@ namespace MyCG
             m_Segments_3.clear();
             m_intersection_segments.clear();
             m_intersection_interval.clear();
+            m_intersection_segments.clear();
+            m_generation_intersection_points.clear();
+            m_generation_convexhull_points.clear();
+            m_generation_convexhull_segments.clear();
+            m_intersection_convexhull.clear();
+            m_intersection_convexhull_points.clear();
             m_empty = true;
         }
 
@@ -105,46 +111,13 @@ namespace MyCG
             if(!file.is_open())
             {
                 std::cout << "Error opening file" << std::endl;
-
-                std::cout << "Default generate 2 convexhulls that contain 30 points" << std::endl;
-
-                std::ofstream file2(filename);
-                typedef CGAL::Creator_uniform_2<double, Point_2>  Creator;
-                typedef CGAL::Random_points_in_square_2<Point_2, Creator> Point_Generator;
-                CGAL::Random random;
-                for(int i=0;i<2;++i)
-                {
-                    double random_x = random.uniform_real(-1.0, 1.0);
-                    double random_y = random.uniform_real(-1.0, 1.0);
-                    CGAL::random_convex_set_2(30, std::back_inserter(m_generation_convexhull_points), Point_Generator(2.0));
-                    for(int j=i*30;j<(i+1)*30;++j)
-                        m_generation_convexhull_points[j] = Point_2(m_generation_convexhull_points[j].x() + random_x,
-                                                                    m_generation_convexhull_points[j].y() + random_y);
-                }
-                    
-                int begin = 0;
-                while(begin < 2 * 30)
-                {
-                    for(int i=begin;i<begin+29;++i)
-                    {
-                        m_generation_convexhull_segments.push_back(Segment_2(m_generation_convexhull_points[i], 
-                                                                    m_generation_convexhull_points[(i+1)]));
-                        file2 << m_generation_convexhull_segments[i] << std::endl;
-                    }
-                        
-                    m_generation_convexhull_segments.push_back(Segment_2(m_generation_convexhull_points[begin], 
-                                                                m_generation_convexhull_points[begin+29]));
-                    file2 << m_generation_convexhull_segments[begin+29] << std::endl;
-                    begin+=30;
-                }
                 return false;
             }
 
-            double loc_x, loc_y, loc_z, loc_x2, loc_y2, loc_z2;
-            while(file >> loc_x >> loc_y >> loc_z >> loc_x2 >> loc_y2 >> loc_z2)
+            double loc_x, loc_y, loc_x2, loc_y2;
+            while(file >> loc_x >> loc_y >> loc_x2 >> loc_y2 )
             {
                 m_generation_convexhull_points.push_back(Point_2(loc_x, loc_y));
-                m_generation_convexhull_points.push_back(Point_2(loc_x2, loc_y2));
                 m_generation_convexhull_segments.push_back(Segment_2(Point_2(loc_x, loc_y), Point_2(loc_x2, loc_y2)));
             }
             return true;
@@ -191,6 +164,24 @@ namespace MyCG
             /* Default generate 7 convexhulls that contain 30 points */
             clean();
             
+            static int count = 0;
+            count = 1;
+            std::ofstream outfile;
+            std::ifstream file;
+            if(count == 1)
+            {
+                file.open("../../res/TestPoints/ConvexHull.chf");
+                if(!file.is_open())
+                {
+                    outfile.open("../../res/TestPoints/ConvexHulls.chf");
+                    if(!outfile.is_open())
+                        std::cout << "Error opening file" << std::endl;
+                }else
+                {
+                    file.close();
+                }
+            }
+
             typedef CGAL::Creator_uniform_2<double, Point_2>  Creator;
             typedef CGAL::Random_points_in_square_2<Point_2, Creator> Point_Generator;
             CGAL::Random random;
@@ -210,10 +201,15 @@ namespace MyCG
                 for(int i=begin;i<begin+29;++i)
                     m_generation_convexhull_segments.push_back(Segment_2(m_generation_convexhull_points[i], 
                                                                 m_generation_convexhull_points[(i+1)]));
-                m_generation_convexhull_segments.push_back(Segment_2(m_generation_convexhull_points[begin], 
-                                                            m_generation_convexhull_points[begin+29]));
+                m_generation_convexhull_segments.push_back(Segment_2(m_generation_convexhull_points[begin+29], 
+                                                            m_generation_convexhull_points[begin]));
+                for(int i=begin;i<begin+29;++i)
+                    outfile << m_generation_convexhull_segments[i] << std::endl;
+                outfile << m_generation_convexhull_segments[begin+29] << std::endl;
                 begin+=30;
             }
+
+            file.close();
         }
 
         void Model::flip_empty()
@@ -311,14 +307,14 @@ namespace MyCG
             double centerx = (bbox.xmin() + bbox.xmax()) / 2.0;
             double centery = (bbox.ymin() + bbox.ymax()) / 2.0;
             double centerz = 0;
-            m_center = Point_3(centerx,centerx,0.f);
+            m_center = Point_3(centerx,centery,0.f);
             if(std::fabs(centerx) < 1e-5 || std::fabs(centery) < 1e-5)
                 m_radius = 1.f;
             else
             {
                 Point_3 corner(bbox.xmin(), bbox.ymin(), 1.f);
                 m_radius = std::sqrt(CGAL::squared_distance(m_center, corner));  
-            }                
+            }             
         }
     
     /// @}

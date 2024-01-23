@@ -121,7 +121,7 @@
         {
             std::string info = "Loading file: " + filename.toStdString() + "\n";
             m_information->setPlainText(QString::fromStdString(info));
-            if(m_glviewer->load_file_int(filename.toStdString()))
+            if(m_glviewer->load_file_chf(filename.toStdString()))
             {
                 std::string info = "File [ " + filename.toStdString() + " ] loaded.\n";
                 std::string details = "  Load Points with vertices \n";
