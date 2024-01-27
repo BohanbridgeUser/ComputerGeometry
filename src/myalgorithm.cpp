@@ -754,53 +754,71 @@ namespace MyCG
                         return true;
                     else if(p_on_s1)
                     {
-                        if(p_inter_point->y() > std::max(chain2[mid2l].y(),chain2[mid2r].y()))
-                            return Is_Monotonechain_Edge_Intersect(chain1, left1, right1, chain2, left2, mid2l);
+                        if(!ToLeft(chain2[mid2l], chain2[mid2r], *p_inter_point) && !ToRight(chain2[mid2l], chain2[mid2r], *p_inter_point))
+                        {
+                            if(ToLeft(chain2[mid2l], chain2[mid2r], chain2[mid2l-1]) == ToLeft(chain2[mid2l], chain2[mid2r], chain1[mid1r]))
+                                return Is_Monotonechain_Edge_Intersect(chain1, mid1l, right1, chain2, left2, mid2l);
+                            else
+                                return Is_Monotonechain_Edge_Intersect(chain1, left1, mid1r, chain2, left2, mid2l);
+                        }
                         else
-                            return Is_Monotonechain_Edge_Intersect(chain1, left1, right1, chain2, mid2r, right2);
+                        {
+                            if(ToLeft(chain2[mid2l], chain2[mid2r], chain2[mid2r+1]) == ToLeft(chain2[mid2l], chain2[mid2r], chain1[mid1r]))
+                                return Is_Monotonechain_Edge_Intersect(chain1, mid1l, right1, chain2, mid2r, right2);
+                            else
+                                return Is_Monotonechain_Edge_Intersect(chain1, left1, mid1r, chain2, mid2r, right2);
+                        }
                     }
                     else if(p_on_s2)
                     {
-                        if(p_inter_point->y() > std::max(chain1[mid1l].y(), chain1[mid1r].y()))
-                            return Is_Monotonechain_Edge_Intersect(chain1, left1, mid1l, chain2, left2, right2);
+                        if(!ToLeft(chain1[mid1l], chain1[mid1r], *p_inter_point) && !ToRight(chain1[mid1l], chain1[mid1r], *p_inter_point))
+                        {
+                            if(ToLeft(chain1[mid1l], chain1[mid1r], chain1[mid1l-1]) == ToLeft(chain1[mid1l], chain1[mid1r], chain2[mid2r]))
+                                return Is_Monotonechain_Edge_Intersect(chain1, left1, mid1l, chain2, mid2l, right2);
+                            else
+                                return Is_Monotonechain_Edge_Intersect(chain1, left1, mid1l, chain2, left2, mid2r);
+                        }
                         else
-                            return Is_Monotonechain_Edge_Intersect(chain1, mid1r, right1, chain2, left2, right2);
+                        {
+                            if(ToLeft(chain1[mid1l], chain1[mid1r], chain1[mid1r+1]) == ToLeft(chain1[mid1l], chain1[mid1r], chain2[mid2r]))
+                                return Is_Monotonechain_Edge_Intersect(chain1, mid1r, right1, chain2, mid2l, right2);
+                            else
+                                return Is_Monotonechain_Edge_Intersect(chain1, mid1r, right1,  chain2, left2, mid2r);
+                        }
                     }
                 }
-                else if( p_inter_point->y() > std::max(chain1[mid1l].y(), chain1[mid1r].y()) &&
-                         p_inter_point->y() > std::max(chain2[mid2l].y(), chain2[mid2r].y()) )
+                else 
                 {
-                    if( std::min(chain1[mid1l].y(), chain1[mid1r].y()) < std::min(chain2[mid2l].y(), chain2[mid2r].y()) )
-                        return Is_Monotonechain_Edge_Intersect(chain1, left1, mid1l, chain2, left2, right2);
-                    else
-                        return Is_Monotonechain_Edge_Intersect(chain1, left1, right1, chain2, left2, mid2l);
+                    bool s1f = (ToLeft(chain1[mid1l], chain1[mid1r], *p_inter_point) && ToRight(chain1[mid1l], chain1[mid1r], *p_inter_point))? true:false;
+                    bool s2f = (ToLeft(chain2[mid2l], chain2[mid2r], *p_inter_point) && ToRight(chain2[mid2l], chain2[mid2r], *p_inter_point))? true:false;
+
+                    if(s1f && s2f)
+                    {
+                        double y1 = chain1[mid1r].y();
+                        double y2 = chain2[mid2r].y();
+                        if(GTZERO(y1-y2))
+                            return Is_Monotonechain_Edge_Intersect(chain1, std::max(mid1l,left1+1), right1, chain2, left2, right2);
+                        else if(LTZERO(y1-y2))
+                            return Is_Monotonechain_Edge_Intersect(chain1, left1, right1, chain2, std::max(mid2l,left2+1), right2);
+                        else
+                            return Is_Monotonechain_Edge_Intersect(chain1, mid1l, right1, chain2, mid2l, right2);
+                    }
+                    else if((!s1f) && (!s2f))
+                    {
+                        double y1 = chain1[mid1l].y();
+                        double y2 = chain2[mid2l].y();
+                        if(GTZERO(y2-y1))
+                            return Is_Monotonechain_Edge_Intersect(chain1, left1, std::min(mid1r, right1-1), chain2, left2, right2);
+                        else if(LTZERO(y2-y1))
+                            return Is_Monotonechain_Edge_Intersect(chain1, left1, right1, chain2, left2, std::min(mid2r, right2-1));
+                        else
+                            return Is_Monotonechain_Edge_Intersect(chain1, left1, mid1r, chain2, left2, mid2r);
+                    }
+                    else if( s1f && (!s2f) )
+                        return Is_Monotonechain_Edge_Intersect(chain1, mid1l, right1, chain2, left2, mid2l);
+                    else if( (!s1f) && s2f )
+                        return Is_Monotonechain_Edge_Intersect(chain1, left1, mid1l, chain2, mid2l, right2);
                 }
-                else if( p_inter_point->y() < std::min(chain1[mid1l].y(), chain1[mid1r].y()) &&
-                         p_inter_point->y() < std::min(chain2[mid2l].y(), chain2[mid2r].y()) )
-                {
-                    if( std::max(chain1[mid1l].y(), chain1[mid1r].y()) > std::max(chain2[mid2l].y(), chain2[mid2r].y()) )
-                        return Is_Monotonechain_Edge_Intersect(chain1, mid1r, right1, chain2, left2, right2);
-                    else
-                        return Is_Monotonechain_Edge_Intersect(chain1, left1, right1, chain2, mid2r, right2);
-                }
-                else if( p_inter_point->y() < std::min(chain1[mid1l].y(), chain1[mid1r].y()) &&
-                         p_inter_point->y() > std::max(chain2[mid2l].y(), chain2[mid2r].y()) )
-                {
-                    if( ToLeft(chain1[mid1l], chain1[mid1r], chain2[mid2r]) != ToLeft (chain1[mid1l], chain1[mid1r], chain1[mid1r+1]))
-                        return Is_Monotonechain_Edge_Intersect(chain1, left1, mid1r, chain2, left2, mid2r);
-                    else
-                        return Is_Monotonechain_Edge_Intersect(chain1, mid1l, right1, chain2, mid2l, right2);
-                }   
-                else if( p_inter_point->y() < std::min(chain2[mid2l].y(), chain2[mid2r].y()) &&
-                         p_inter_point->y() > std::max(chain1[mid1l].y(), chain1[mid1r].y()) )
-                {
-                    if( ToLeft(chain2[mid2l], chain2[mid2r], chain1[mid1r]) != ToLeft(chain2[mid2l], chain2[mid2r], chain2[mid2r+1]))
-                        return Is_Monotonechain_Edge_Intersect(chain1, left1, mid1r, chain2, left2, mid2r);
-                    else
-                        return Is_Monotonechain_Edge_Intersect(chain1, mid1l, right1, chain2, mid2l, right2);
-                }
-                else
-                    return false;
             }
             else
                 return false;
@@ -809,7 +827,7 @@ namespace MyCG
             return false;
     }
 
-    bool Intersection_2::ConvexHull_Intersection(DataPoints_2& convexhull_intersection_points, 
+    std::vector<std::vector<int>> Intersection_2::ConvexHull_Intersection(DataPoints_2& convexhull_intersection_points, 
                                                  DataSegments_2& convexhull_intersection_segments, 
                                                  const DataPoints_2& rpoints,
                                                  const DataSegments_2& rsegments)
@@ -820,7 +838,9 @@ namespace MyCG
          * */
         std::vector<DataPoints_2> convexhulls(7);
         std::vector<DataPoints_2> monotonechains(14);
-        for(int i=0;i<2;++i)
+        std::vector<std::vector<int>> intersections(7,std::vector<int>(7,0));
+        unsigned int convexhull_num = rpoints.size() / 30;
+        for(int i=0;i<convexhull_num;++i)
         {
             /* The Generation ConvexHull points are sorted anticlockwise */
             for(int begin=i*30;begin<30*(i+1);++begin)
@@ -849,9 +869,9 @@ namespace MyCG
             } while (iter!=min);
             monotonechains[2*i].emplace_back(*min);
             monotonechains[2*i].emplace_back(2e31,(*iter).y());
-            std::cout << "monotonechain size :" << monotonechains[2*i].size() << std::endl;
-            for(auto mono:monotonechains[2*i])
-                std::cout << mono << std::endl;
+            // std::cout << "monotonechain size :" << monotonechains[2*i].size() << std::endl;
+            // for(auto mono:monotonechains[2*i])
+            //     std::cout << mono << std::endl;
 
             iter = max;
             monotonechains[2*i+1].emplace_back(-2e31,(*iter).y());
@@ -864,18 +884,18 @@ namespace MyCG
             }while(iter!=min);
             monotonechains[2*i+1].emplace_back(*min);
             monotonechains[2*i+1].emplace_back(-2e31,(*iter).y());
-            std::cout << "monotonechain size :" << monotonechains[2*i+1].size() << std::endl;
-            for(auto mono:monotonechains[2*i+1])
-                std::cout << mono << std::endl;
+            // std::cout << "monotonechain size :" << monotonechains[2*i+1].size() << std::endl;
+            // for(auto mono:monotonechains[2*i+1])
+            //     std::cout << mono << std::endl;
         }  
         std::cout << "monotonechains prepared" << std::endl;
+        
         /**
          * 3. Intersection test
          * */
-        bool intersection = false;
-        for(int i=0;i<2;++i)
+        for(int i=0;i<convexhull_num;++i)
         {
-            for(int j=i+1;j<2;++j)
+            for(int j=i+1;j<convexhull_num;++j)
             {
                 if(i==j) continue;
                 if(Is_Monotonechain_Edge_Intersect(monotonechains[2*i],0,monotonechains[2*i].size()-1,
@@ -883,14 +903,17 @@ namespace MyCG
                    Is_Monotonechain_Edge_Intersect(monotonechains[2*i+1],0,monotonechains[2*i+1].size()-1,
                                                    monotonechains[2*j],0,monotonechains[2*j].size()-1))
                 {
-                    intersection = true;
+                    intersections[i][j] = 1;
                     std::cout << "Monotonechain " << i << " and " << j << " intersect" << std::endl;
                 }
                 else
+                {
+                    intersections[i][j] = 0;
                     std::cout << "Monotonechain " << i << " and " << j << " non-intersect" << std::endl;
+                }
             }
         }
-        return intersection;
+        return intersections;
     }
 
 }

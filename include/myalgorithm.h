@@ -5,7 +5,7 @@
 
 namespace MyCG
 {
-    #define EPS 1e-8
+    #define EPS 1e-15
     #define EQZERO(x) (fabs(x) < EPS)
     #define LTZERO(x) (x < -EPS)
     #define GTZERO(x) (x > EPS)
@@ -175,10 +175,10 @@ namespace MyCG
             static Point_2 Intersection_Segments(const Segment_LR& rsegment1, const Segment_LR& rsegment2);
             static bool Is_Monotonechain_Edge_Intersect(const DataPoints_2& chain1, int left1, int right1, 
                                                         const DataPoints_2& chain2, int left2, int right2);
-            static bool ConvexHull_Intersection(DataPoints_2& convexhull_intersection_points, 
-                                                DataSegments_2& convexhull_intersection_segments,
-                                                const DataPoints_2& rpoints, 
-                                                const DataSegments_2& rsegments);
+            static std::vector<std::vector<int>> ConvexHull_Intersection(DataPoints_2& convexhull_intersection_points, 
+                                                 DataSegments_2& convexhull_intersection_segments,
+                                                 const DataPoints_2& rpoints, 
+                                                 const DataSegments_2& rsegments);
     };
 
 }

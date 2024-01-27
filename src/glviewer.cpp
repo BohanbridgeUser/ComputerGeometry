@@ -279,7 +279,7 @@
         m_gl_display->check_buffer();
     }
 
-    void glViewer::convexhulls_intersection()
+    void glViewer::convexhulls_intersection(std::vector<std::vector<int>>& intersections)
     {
         for(int i=8;i<11;i++)
             m_gl_display->setdisplaymode(i);
@@ -287,11 +287,8 @@
         DataSegments_2& generate_segments_2 = m_model->Get_Generation_ConvexHull_Segments();
         DataPoints_2& intersection_points_2 = m_model->Get_Intersection_ConvexHull_Points();
         DataSegments_2& intersection_segments_2 = m_model->Get_Intersection_ConvexHull_Segments();
-        MyCG::Intersection_2::ConvexHull_Intersection(intersection_points_2, intersection_segments_2,
+        intersections = MyCG::Intersection_2::ConvexHull_Intersection(intersection_points_2, intersection_segments_2,
                                                       generate_points_2, generate_segments_2);
-        // m_model->flip_empty();
-        // adjustCamera();
-        // m_gl_display->check_buffer();
     }
 
 /// @}

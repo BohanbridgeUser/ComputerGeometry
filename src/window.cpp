@@ -225,7 +225,14 @@
 
     void MainWindow::on_actionConvexHull_2_triggered()
     {
-        m_glviewer->convexhulls_intersection();
+        std::vector<std::vector<int>> intersections(7, std::vector<int>(7, 0));
+        m_glviewer->convexhulls_intersection(intersections);
+        std::string info;
+        for(int i=0;i<intersections.size();++i)
+            for(int j=i+1;j<intersections[i].size();++j)
+                if(intersections[i][j] != 0)
+                    info += "convexhull " + std::to_string(i) + " and " + std::to_string(j) + " intersect\n";
+        m_information->setPlainText(QString::fromStdString(info)); 
         update();
     }
 
