@@ -47,6 +47,7 @@ protected:
         void on_actionSegments_2_triggered();
         void on_actionConvexHulls_triggered();
         void on_actionConvexHull_2_triggered();
+        void on_actionConvexHull_Edge_Chasing_triggered();
 };
 
 

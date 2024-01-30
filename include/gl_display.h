@@ -44,8 +44,8 @@ struct Draw_Options
     float Generation_ConvexHull_Line_Size = 2.0f;
     QColor generation_convexhull_line_color = QColor(0.f, 178.f, 191.f);
 
-    float Intersection_Convexhull_Point_Size = 4.0f;
-    QColor intersection_convexhull_point_color = QColor(32.f, 90.f, 167.f);
+    float Intersection_Convexhull_Point_Size = 10.0f;
+    QColor intersection_convexhull_point_color = QColor(255.f, 0.f, 0.f);
 
     float Intersection_ConvexHull_Size = 2.0f;
     QColor intersection_convexhull_color = QColor(220.f, 216.f, 0.f);

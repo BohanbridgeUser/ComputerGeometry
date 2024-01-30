@@ -302,6 +302,16 @@ namespace MyCG
                     temp_p.push_back(m_generation_convexhull_segments[i].target());
                     temp_p.push_back(m_generation_convexhull_segments[i].source());
                 }
+            if(!m_intersection_convexhull.empty())
+                for(int i=0;i<m_intersection_convexhull.size();++i)
+                {
+                    temp_p.push_back(m_intersection_convexhull[i].target());
+                    temp_p.push_back(m_intersection_convexhull[i].source());
+                }
+            if(!m_intersection_convexhull_points.empty())
+                for(int i=0;i<m_intersection_convexhull_points.size();++i)
+                    temp_p.push_back(m_intersection_convexhull_points[i]);
+
 
             Bbox_2 bbox = CGAL::bounding_box(temp_p.begin(), temp_p.end());
             double centerx = (bbox.xmin() + bbox.xmax()) / 2.0;

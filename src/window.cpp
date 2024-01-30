@@ -236,5 +236,11 @@
         update();
     }
 
+    void MainWindow::on_actionConvexHull_Edge_Chasing_triggered()
+    {
+        m_glviewer->convexhulls_edge_chasing();
+        update();
+    }
+
 /// @}
 

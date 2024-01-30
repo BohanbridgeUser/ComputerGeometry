@@ -45,6 +45,7 @@
         pos_generation_convexhull_points.clear();
         pos_generation_convexhull_lines.clear();
         pos_intersection_convexhull.clear();
+        pos_intersection_convexhull_points.clear();
         gl_buffer_init = false;
         for(int i=0;i<SIZE_OF_MODE;++i)
             m_mode[i] = false;
@@ -306,6 +307,8 @@
                               vbo[GENERATION_CONVEXHULL_LINES_LOCATION], pos_generation_convexhull_lines, "vertex");
             init_buffer(rendering_programs[SEGMENT_SHADER],vao[INTERSECTION_CONVEXHULL_VAO],
                               vbo[INTERSECTION_CONVEXHULL_LOCATION], pos_intersection_convexhull, "vertex");
+            init_buffer(rendering_programs[VERTEX_SHADER],vao[INTERSECTION_CONVEXHULL_POINTS_VAO],
+                              vbo[INTERSECTION_CONVEXHULL_POINTS_LOCATION], pos_intersection_convexhull_points, "pos_vertex");
         }
         gl_buffer_init = true;
     }

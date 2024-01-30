@@ -102,6 +102,7 @@
      <addaction name="actionInterval"/>
      <addaction name="actionSegments_2"/>
      <addaction name="actionConvexHull_2"/>
+     <addaction name="actionConvexHull_Edge_Chasing"/>
     </widget>
     <addaction name="menuConvexHull"/>
     <addaction name="menuIntersection"/>
@@ -286,7 +287,12 @@
   </action>
   <action name="actionConvexHull_2">
    <property name="text">
-    <string>ConvexHull</string>
+    <string>ConvexHull_Check</string>
+   </property>
+  </action>
+  <action name="actionConvexHull_Edge_Chasing">
+   <property name="text">
+    <string>ConvexHull_Edge_Chasing</string>
    </property>
   </action>
  </widget>

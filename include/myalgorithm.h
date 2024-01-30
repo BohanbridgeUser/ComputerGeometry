@@ -173,12 +173,23 @@ namespace MyCG
             static DataPoints_2 Intersection(const DataSegments_2& rsegments);
             static bool Is_Intersection_Segments(const Segment_LR& rsegment1, const Segment_LR& rsegment2);
             static Point_2 Intersection_Segments(const Segment_LR& rsegment1, const Segment_LR& rsegment2);
+            static bool Is_Intersection_Segments(const Segment_2& rsegment1, const Segment_2& rsegment2);
+            static Point_2 Intersection_Segments(const Segment_2& rsegment1, const Segment_2& rsegment2);
             static bool Is_Monotonechain_Edge_Intersect(const DataPoints_2& chain1, int left1, int right1, 
                                                         const DataPoints_2& chain2, int left2, int right2);
             static std::vector<std::vector<int>> ConvexHull_Intersection(DataPoints_2& convexhull_intersection_points, 
                                                  DataSegments_2& convexhull_intersection_segments,
                                                  const DataPoints_2& rpoints, 
                                                  const DataSegments_2& rsegments);
+            
+            static void Edge_Chasing(const DataPoints_2& rpoints, DataPoints_2& intersections,
+                                     int begin1, int end1, int begin2, int end2);
+            
+            static void ConvexHull_Edge_Chasing(DataPoints_2& convexhull_intersection_points, 
+                                                DataSegments_2& convexhull_intersection_segments,
+                                                const DataPoints_2& rpoints, 
+                                                const DataSegments_2& rsegments);
+            
     };
 
 }

@@ -281,14 +281,31 @@
 
     void glViewer::convexhulls_intersection(std::vector<std::vector<int>>& intersections)
     {
-        for(int i=8;i<11;i++)
+        for(int i=7;i<11;i++)
             m_gl_display->setdisplaymode(i);
         DataPoints_2& generate_points_2 = m_model->Get_Generation_ConvexHull_Points();
         DataSegments_2& generate_segments_2 = m_model->Get_Generation_ConvexHull_Segments();
         DataPoints_2& intersection_points_2 = m_model->Get_Intersection_ConvexHull_Points();
         DataSegments_2& intersection_segments_2 = m_model->Get_Intersection_ConvexHull_Segments();
         intersections = MyCG::Intersection_2::ConvexHull_Intersection(intersection_points_2, intersection_segments_2,
+                                                                      generate_points_2, generate_segments_2);
+    }
+
+    void glViewer::convexhulls_edge_chasing()
+    {
+        for(int i=7;i<11;i++)
+            m_gl_display->setdisplaymode(i);
+        DataPoints_2& generate_points_2 = m_model->Get_Generation_ConvexHull_Points();
+        DataSegments_2& generate_segments_2 = m_model->Get_Generation_ConvexHull_Segments();
+        DataPoints_2& intersection_points_2 = m_model->Get_Intersection_ConvexHull_Points();
+        DataSegments_2& intersection_segments_2 = m_model->Get_Intersection_ConvexHull_Segments();
+        MyCG::Intersection_2::ConvexHull_Edge_Chasing(intersection_points_2, intersection_segments_2,
                                                       generate_points_2, generate_segments_2);
+        points_data_to_display(intersection_points_2, m_gl_display->Get_pos_intersection_convexhull_points());
+        segments_data_to_display(intersection_segments_2, m_gl_display->Get_pos_intersection_convexhull());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
     }
 
 /// @}

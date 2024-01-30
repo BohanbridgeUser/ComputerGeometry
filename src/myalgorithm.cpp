@@ -828,9 +828,9 @@ namespace MyCG
     }
 
     std::vector<std::vector<int>> Intersection_2::ConvexHull_Intersection(DataPoints_2& convexhull_intersection_points, 
-                                                 DataSegments_2& convexhull_intersection_segments, 
-                                                 const DataPoints_2& rpoints,
-                                                 const DataSegments_2& rsegments)
+                                                                          DataSegments_2& convexhull_intersection_segments, 
+                                                                          const DataPoints_2& rpoints,
+                                                                          const DataSegments_2& rsegments)
     {
         /**
          * 1. Default generate 7 convexhulls that contain 30 points 
@@ -914,6 +914,128 @@ namespace MyCG
             }
         }
         return intersections;
+    }
+
+    bool Intersection_2::Is_Intersection_Segments(const Segment_2& rsegment1, const Segment_2& rsegment2)
+    {
+        Point_2 s1l = (rsegment1.source().x() < rsegment1.target().x())? rsegment1.source():rsegment1.target();
+        Point_2 s1r = (rsegment1.source().x() > rsegment1.target().x())? rsegment1.source():rsegment1.target();
+        Point_2 s2l = (rsegment2.source().x() < rsegment2.target().x())? rsegment2.source():rsegment2.target();
+        Point_2 s2r = (rsegment2.source().x() > rsegment2.target().x())? rsegment2.source():rsegment2.target();
+        /* mutex test */
+        if(std::min(s1l.x(),s1r.x()) > std::max(s2l.x(),s2r.x()) || std::min(s2l.x(),s2r.x()) > std::max(s1l.x(),s1r.x()) || 
+           std::min(s1l.y(),s1r.y()) > std::max(s2l.y(),s2r.y()) || std::min(s2l.y(),s2r.y()) > std::max(s1l.y(),s1r.y()))
+            return false;
+
+        /* intersection test*/
+        if(ToLeft(s1l,s1r,s2l) && !ToRight(s1l,s1r,s2l) && ToRight(s1l, s1r, s2r) && !ToLeft(s1l, s1r, s2r)
+            && ToLeft(s2l,s2r,s1r) && !ToRight(s2l,s2r,s1r) && ToRight(s2l, s2r, s1l) && !ToLeft(s2l, s2r, s1l))
+            return true;
+        else if(ToLeft(s1l,s1r,s2r) && !ToRight(s1l,s1r,s2r) && ToRight(s1l, s1r, s2l) && !ToLeft(s1l, s1r, s2l)
+            && ToLeft(s2l,s2r,s1l) && !ToRight(s2l,s2r,s1l) && ToRight(s2l, s2r, s1r) && !ToLeft(s2l, s2r, s1r))
+            return true;
+        else 
+            return false;
+    }
+
+    Point_2 Intersection_2::Intersection_Segments(const Segment_2& rsegment1, const Segment_2& rsegment2)
+    {
+        Point_2 s1l = (rsegment1.source().x() < rsegment1.target().x())? rsegment1.source():rsegment1.target();
+        Point_2 s1r = (rsegment1.source().x() > rsegment1.target().x())? rsegment1.source():rsegment1.target();
+        Point_2 s2l = (rsegment2.source().x() < rsegment2.target().x())? rsegment2.source():rsegment2.target();
+        Point_2 s2r = (rsegment2.source().x() > rsegment2.target().x())? rsegment2.source():rsegment2.target();
+        Vector_2 va01(s1l.x(), s1l.y()), vb01(s1r.x(),s1r.y());
+        Vector_2 va02(s2l.x(), s2l.y()), vb02(s2r.x(),s2r.y());
+        double t = CGAL::determinant(vb01-va01,va02-va01) / (CGAL::determinant(vb01-va01,vb02-va02));
+        Vector_2 result1 = va02 - t * (vb02-va02);
+        return Point_2(result1.x(),result1.y());
+    }
+
+    void Intersection_2::Edge_Chasing(const DataPoints_2& rpoints, DataPoints_2& intersections,
+                                      int begin1, int end1, int begin2, int end2)
+    {
+        int e=begin1,  f=begin2;
+        auto fun_advance = [](int index, int begin, int end)->int{
+            if(index == end) return begin;
+            else return index+1;
+        };
+
+        do{
+            const Point_2& fb = rpoints[f];
+            const Point_2& fe = rpoints[fun_advance(f,begin2,end2)];
+            const Point_2& eb = rpoints[e];
+            const Point_2& ee = rpoints[fun_advance(e,begin1,end1)];
+            if( (ToLeft(eb, ee, fe) && CGAL::determinant(ee-eb, fe-fb) < 0) || 
+                (!ToLeft(eb, ee, fe)&& CGAL::determinant(ee-eb, fe-fb) > 0))
+            {
+                f = fun_advance(f, begin2, end2);
+                Segment_2 edgeE(eb, ee);
+                Segment_2 edgeF(fb, fe);
+                if(Is_Intersection_Segments(edgeE, edgeF))
+                {
+                    Point_2 p = Intersection_Segments(edgeE, edgeF);
+                    std::cout << edgeE.source() << " " << edgeE.target() << std::endl;
+                    std::cout << edgeF.source() << " " << edgeF.target() << std::endl;
+                    intersections.push_back(p);
+                    std::cout << "intersecion!\n";
+                    std::cout << p << std::endl;
+                }
+            }
+            if( (ToLeft(fb, fe, ee) && CGAL::determinant(fe-fb, ee-eb) < 0) || 
+                (!ToLeft(fb, fe, ee)&& CGAL::determinant(fe-fb, ee-eb) > 0) )
+            {
+                e = fun_advance(e, begin1, end1);
+                Segment_2 edgeE(eb, ee);
+                Segment_2 edgeF(fb, fe);
+                if(Is_Intersection_Segments(edgeE, edgeF))
+                {
+                    Point_2 p = Intersection_Segments(edgeE, edgeF);
+                    std::cout << edgeE.source() << " " << edgeE.target() << std::endl;
+                    std::cout << edgeF.source() << " " << edgeF.target() << std::endl;
+                    intersections.push_back(p);
+                    std::cout << "intersecion!\n";
+                    std::cout << p << std::endl;
+                }
+            }
+            std::cout << "e: " << e << " f: " << f << std::endl;
+        }while(e!=begin1 || f!=begin2);
+    }
+
+    void Intersection_2::ConvexHull_Edge_Chasing(DataPoints_2& convexhull_intersection_points, 
+                                                 DataSegments_2& convexhull_intersection_segments, 
+                                                 const DataPoints_2& rpoints,
+                                                 const DataSegments_2& rsegments)
+    {
+        // All the points are sorted anticlockwise
+        unsigned int convexhull_num = rpoints.size() / 30;
+        std::vector<DataPoints_2> convexhulls(convexhull_num);
+        DataPoints_2 points;
+        for(int i=0;i<convexhull_num;++i)
+        {
+            DataPoints_2 temp(rpoints.begin()+i*30, rpoints.begin()+(i+1)*30);
+            int LTL = left_than_lowest(temp);
+            int j = LTL;
+            do{
+                points.push_back(temp[j]);
+                j++;
+                if(j==30)
+                    j=0;
+            }while(j!=LTL);
+        }
+        for(int i=0;i<points.size()-1;++i)
+        {
+            if(i==29)
+            {
+                std::cout << points[i] << " " << points[0] << std::endl;
+            }
+            else std::cout << points[i] << " " << points[i+1]<< std::endl;
+        }
+        std::cout << points[59] << " " << points[30] << std::endl;
+            
+        for(int i=0;i<convexhull_num;++i)
+           for(int j=i+1;j<convexhull_num;++j)
+                Edge_Chasing(points, convexhull_intersection_points, i*30, (i+1)*30-1, j*30, (j+1)*30-1);
+        std::cout << convexhull_intersection_points.size() << std::endl;
     }
 
 }

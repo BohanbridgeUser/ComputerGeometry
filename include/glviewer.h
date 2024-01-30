@@ -72,6 +72,7 @@ class glViewer : public CGAL::QGLViewer
             void interval();
             void segments_intersection_2();
             void convexhulls_intersection(std::vector<std::vector<int>>& intersections);
+            void convexhulls_edge_chasing();
 
             void clean();
         /// @}
