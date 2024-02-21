@@ -954,51 +954,81 @@ namespace MyCG
     void Intersection_2::Edge_Chasing(const DataPoints_2& rpoints, DataPoints_2& intersections,
                                       int begin1, int end1, int begin2, int end2)
     {
-        int e=begin1,  f=begin2;
+        
         auto fun_advance = [](int index, int begin, int end)->int{
             if(index == end) return begin;
             else return index+1;
         };
+        enum InFlag{
+            PIN,
+            QIN,
+            UNKNOWN
+        };
+        auto InOut = [&intersections](const Point_2& inter_p, InFlag in_flag, bool pHQ, bool qHP){
+            intersections.push_back(inter_p);
 
+            if(pHQ)
+                return PIN;
+            else if(qHP)
+                return QIN;
+            else
+                return in_flag;
+        };
+        auto Advance1 = [&begin1, &end1, &intersections, fun_advance](int lb, int& bb, bool inside, const Point_2& inter_p){
+            // if(inside)
+            //     intersections.push_back(inter_p);
+            bb++;
+            return fun_advance(lb,begin1,end1);
+        };
+        auto Advance2 = [&begin2, &end2, &intersections, fun_advance](int lb, int& bb, bool inside, const Point_2& inter_p){
+            // if(inside)
+            //     intersections.push_back(inter_p);
+            bb++;
+            return fun_advance(lb,begin2,end2);
+        };
+
+        int a=begin1,  b=begin2;
+        int aa = 0, bb = 0;
+        int n = end1 - begin1 + 1 ,m = end2 - begin2 + 1;
+        InFlag in_flag = UNKNOWN;
+        bool IsFirstPoint = true;
         do{
-            const Point_2& fb = rpoints[f];
-            const Point_2& fe = rpoints[fun_advance(f,begin2,end2)];
-            const Point_2& eb = rpoints[e];
-            const Point_2& ee = rpoints[fun_advance(e,begin1,end1)];
-            if( (ToLeft(eb, ee, fe) && CGAL::determinant(ee-eb, fe-fb) < 0) || 
-                (!ToLeft(eb, ee, fe)&& CGAL::determinant(ee-eb, fe-fb) > 0))
+            const Point_2& qb = rpoints[b];
+            const Point_2& qe = rpoints[fun_advance(b,begin2,end2)];
+            const Point_2& pb = rpoints[a];
+            const Point_2& pe = rpoints[fun_advance(a,begin1,end1)];
+            
+            Segment_2 l1(pb, pe), l2(qb, qe);
+            const auto intersection = CGAL::intersection(l1,l2);
+            double determinant = CGAL::determinant(pe-pb,qe-qb);
+            bool pHQ = ToLeft(qb, qe, pe), qHP = ToLeft(pb, pe, qe);
+            if(intersection)
             {
-                f = fun_advance(f, begin2, end2);
-                Segment_2 edgeE(eb, ee);
-                Segment_2 edgeF(fb, fe);
-                if(Is_Intersection_Segments(edgeE, edgeF))
+                if(in_flag == UNKNOWN && IsFirstPoint)
                 {
-                    Point_2 p = Intersection_Segments(edgeE, edgeF);
-                    std::cout << edgeE.source() << " " << edgeE.target() << std::endl;
-                    std::cout << edgeF.source() << " " << edgeF.target() << std::endl;
-                    intersections.push_back(p);
-                    std::cout << "intersecion!\n";
-                    std::cout << p << std::endl;
+                    aa =  bb = 0;
+                    IsFirstPoint = false;
+                    intersections.push_back(*boost::get<Point_2>(&*intersection));
                 }
+                in_flag = InOut(*boost::get<Point_2>(&*intersection), in_flag, pHQ, qHP);
+                a = fun_advance(a,begin1,end1);
+                b = fun_advance(b,begin2,end2);
             }
-            if( (ToLeft(fb, fe, ee) && CGAL::determinant(fe-fb, ee-eb) < 0) || 
-                (!ToLeft(fb, fe, ee)&& CGAL::determinant(fe-fb, ee-eb) > 0) )
+            else if(determinant >= 0)
             {
-                e = fun_advance(e, begin1, end1);
-                Segment_2 edgeE(eb, ee);
-                Segment_2 edgeF(fb, fe);
-                if(Is_Intersection_Segments(edgeE, edgeF))
-                {
-                    Point_2 p = Intersection_Segments(edgeE, edgeF);
-                    std::cout << edgeE.source() << " " << edgeE.target() << std::endl;
-                    std::cout << edgeF.source() << " " << edgeF.target() << std::endl;
-                    intersections.push_back(p);
-                    std::cout << "intersecion!\n";
-                    std::cout << p << std::endl;
-                }
+                if(qHP)
+                    a = Advance1(a, aa, in_flag == PIN, pe);
+                else 
+                    b = Advance2(b, bb, in_flag == QIN, qe);
             }
-            std::cout << "e: " << e << " f: " << f << std::endl;
-        }while(e!=begin1 || f!=begin2);
+            else
+            {
+                if(pHQ)
+                    b = Advance2(b, bb, in_flag == QIN, qe);
+                else
+                    a = Advance1(a, aa, in_flag == PIN, pe);
+            }
+        }while((aa < n || bb < m) && (aa < 2 * n ) && (bb < 2 * m));
     }
 
     void Intersection_2::ConvexHull_Edge_Chasing(DataPoints_2& convexhull_intersection_points, 
