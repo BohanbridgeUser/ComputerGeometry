@@ -192,6 +192,12 @@ namespace MyCG
             
     };
 
+    class Triangulation
+    {
+        public:
+            static void Triangulation_Monotone(const DataPoints_2& rpoints);
+    };
+
 }
 
 

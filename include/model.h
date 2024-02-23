@@ -40,6 +40,7 @@ namespace MyCG
                 Combination generate_segments_from_points();
                 void generate_segments_on_circle();
                 void generate_convexhulls();
+                void generate_polygon();
 
                 void flip_empty();
             /// @}
@@ -65,6 +66,10 @@ namespace MyCG
                 DataSegments_2& Get_Generation_ConvexHull_Segments() { return m_generation_convexhull_segments; }
                 DataPoints_2& Get_Intersection_ConvexHull_Points() { return m_intersection_convexhull_points; }
                 DataSegments_2& Get_Intersection_ConvexHull_Segments() { return m_intersection_convexhull; }
+
+                /* Generation Polygon */
+                DataPoints_2& Get_Generation_Polygon_Points() { return m_generation_polygon_points; }
+                DataSegments_2& Get_Generation_Polygon_Segments() { return m_generation_polygon_segments; }
 
                 /* Camera */
                 Point_3& Get_Center() { return m_center; }
@@ -130,6 +135,11 @@ namespace MyCG
                 DataSegments_2          m_intersection_interval;
                 DataSegments_2          m_intersection_segments;
                 DataPoints_2            m_generation_intersection_points;
+
+                /* Generation Polygon */
+                DataPoints_2            m_generation_polygon_points;
+                Polygon_2               m_generation_polygon_2;
+                DataSegments_2          m_generation_polygon_segments;
 
                 /* Mesh */ 
                 DataPoints_3            m_points_3;

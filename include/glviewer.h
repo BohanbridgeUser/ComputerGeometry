@@ -60,6 +60,7 @@ class glViewer : public CGAL::QGLViewer
             void generate_segments_from_points();
             void generate_segments_on_circle();
             void generate_convexhulls();
+            void generate_polygon();
 
             // Convexhull
             void convexhull();

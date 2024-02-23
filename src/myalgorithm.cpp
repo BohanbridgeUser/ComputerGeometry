@@ -1068,4 +1068,9 @@ namespace MyCG
         std::cout << convexhull_intersection_points.size() << std::endl;
     }
 
+    void Triangulation::Triangulation_Monotone(const DataPoints_2& rpoints)
+    {
+        
+    }
+
 }

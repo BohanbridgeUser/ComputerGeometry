@@ -46,6 +46,8 @@
         pos_generation_convexhull_lines.clear();
         pos_intersection_convexhull.clear();
         pos_intersection_convexhull_points.clear();
+        pos_generation_polygon_lines.clear();
+        pos_generation_polygon_points.clear();
         gl_buffer_init = false;
         for(int i=0;i<SIZE_OF_MODE;++i)
             m_mode[i] = false;
@@ -198,6 +200,28 @@
         rendering_programs[VERTEX_SHADER].release();
     }
 
+    void Gl_Display::render_generation_polygon_points()
+    {
+        gl->glEnable(GL_POINT_SMOOTH);
+        vao[GENERATION_POLYGON_POINTS_VAO].bind();
+        rendering_programs[VERTEX_SHADER].bind();
+        rendering_programs[VERTEX_SHADER].setUniformValue(generation_polygon_points_size_location, options.Generation_Polygon_Point_Size);
+        rendering_programs[VERTEX_SHADER].setUniformValue(generation_polygon_points_color_location, options.generation_polygon_point_color);
+        gl->glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(pos_generation_polygon_points.size() / 3));
+        rendering_programs[VERTEX_SHADER].release();
+    }
+
+    void Gl_Display::render_generation_polygon_segments()
+    {
+        gl->glEnable(GL_LINE_SMOOTH);
+        vao[GENERATION_POLYGON_LINES_VAO].bind();
+        rendering_programs[SEGMENT_SHADER].bind();
+        rendering_programs[SEGMENT_SHADER].setUniformValue(generation_polygon_lines_color_location, options.generation_polygon_color);
+        gl->glLineWidth(options.Generation_Polygon_Segment_Size);
+        gl->glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(pos_generation_polygon_lines.size() / 3));
+        rendering_programs[SEGMENT_SHADER].release();
+    }
+
     void Gl_Display::initializeGL()
     {
         gl = new QOpenGLFunctions();
@@ -258,6 +282,8 @@
         render_functions.emplace_back(std::bind(&Gl_Display::render_generation_convexhull_lines,this));
         render_functions.emplace_back(std::bind(&Gl_Display::render_intersection_convexhull,this));
         render_functions.emplace_back(std::bind(&Gl_Display::render_intersection_convexhull_points,this));
+        render_functions.emplace_back(std::bind(&Gl_Display::render_generation_polygon_points,this));
+        render_functions.emplace_back(std::bind(&Gl_Display::render_generation_polygon_segments,this));
     }
 
     void Gl_Display::check_buffer()
@@ -309,6 +335,10 @@
                               vbo[INTERSECTION_CONVEXHULL_LOCATION], pos_intersection_convexhull, "vertex");
             init_buffer(rendering_programs[VERTEX_SHADER],vao[INTERSECTION_CONVEXHULL_POINTS_VAO],
                               vbo[INTERSECTION_CONVEXHULL_POINTS_LOCATION], pos_intersection_convexhull_points, "pos_vertex");
+            init_buffer(rendering_programs[VERTEX_SHADER],vao[GENERATION_POLYGON_POINTS_VAO],
+                              vbo[GENERATION_POLYGON_POINTS_LOCATION], pos_generation_polygon_points, "pos_vertex");
+            init_buffer(rendering_programs[SEGMENT_SHADER],vao[GENERATION_POLYGON_LINES_VAO],
+                              vbo[GENERATION_POLYGON_LINES_LOCATION], pos_generation_polygon_lines, "vertex");
         }
         gl_buffer_init = true;
     }
@@ -335,70 +365,18 @@
         vpMatrix.data()[11] = 0.5;
         vpMatrix.data()[15] = 1.;
 
-        rendering_programs[VERTEX_SHADER].bind();
-        points_colorLocation = rendering_programs[VERTEX_SHADER].uniformLocation("color");
-        point_size_location = rendering_programs[VERTEX_SHADER].uniformLocation("Point_Size");
-        mvpLocation = rendering_programs[VERTEX_SHADER].uniformLocation("mvp_matrix");
-        rendering_programs[VERTEX_SHADER].setUniformValue(mvpLocation, mvp_matrix);
-        rendering_programs[VERTEX_SHADER].release();
-
-        rendering_programs[SEGMENT_SHADER].bind();
-        segment_mvpLocation = rendering_programs[SEGMENT_SHADER].uniformLocation("mvp_matrix");
-        segment_colorlocation = rendering_programs[SEGMENT_SHADER].uniformLocation("color");
-        rendering_programs[SEGMENT_SHADER].setUniformValue(segment_mvpLocation, mvp_matrix);
-        rendering_programs[SEGMENT_SHADER].release();
-
-        rendering_programs[VERTEX_SHADER].bind();
-        intersection_points_mvplocation = rendering_programs[VERTEX_SHADER].uniformLocation("mvp_matrix");
-        intersection_points_color_location = rendering_programs[VERTEX_SHADER].uniformLocation("color");
-        intersection_points_size_location = rendering_programs[VERTEX_SHADER].uniformLocation("Point_Size");
-        rendering_programs[VERTEX_SHADER].setUniformValue(intersection_points_mvplocation, mvp_matrix);
-        rendering_programs[VERTEX_SHADER].release();
-
-        rendering_programs[SEGMENT_SHADER].bind();
-        intersection_line_mvplocation = rendering_programs[SEGMENT_SHADER].uniformLocation("mvp_matrix");
-        intersection_line_color_location = rendering_programs[SEGMENT_SHADER].uniformLocation("color");
-        rendering_programs[SEGMENT_SHADER].setUniformValue(intersection_line_mvplocation, mvp_matrix);
-        rendering_programs[SEGMENT_SHADER].release();
-
-        rendering_programs[SEGMENT_SHADER].bind();
-        intersection_interval_mvplocation = rendering_programs[SEGMENT_SHADER].uniformLocation("mvp_matrix");
-        intersection_interval_color = rendering_programs[SEGMENT_SHADER].uniformLocation("color");
-        rendering_programs[SEGMENT_SHADER].setUniformValue(intersection_interval_mvplocation, mvp_matrix);
-        rendering_programs[SEGMENT_SHADER].release();
-
-        rendering_programs[VERTEX_SHADER].bind();
-        generation_intersection_points_mvplocation = rendering_programs[VERTEX_SHADER].uniformLocation("mvp_matrix");
-        generation_intersection_points_color_location = rendering_programs[VERTEX_SHADER].uniformLocation("color");
-        generation_intersection_points_size_location = rendering_programs[VERTEX_SHADER].uniformLocation("Point_Size");
-        rendering_programs[VERTEX_SHADER].setUniformValue(generation_intersection_points_mvplocation, mvp_matrix);
-        rendering_programs[VERTEX_SHADER].release();
-
-        rendering_programs[VERTEX_SHADER].bind();
-        generation_convexhull_points_mvplocation = rendering_programs[VERTEX_SHADER].uniformLocation("mvp_matrix");
-        generation_convexhull_points_color_location = rendering_programs[VERTEX_SHADER].uniformLocation("color");
-        generation_convexhull_points_size_location = rendering_programs[VERTEX_SHADER].uniformLocation("Point_Size");
-        rendering_programs[VERTEX_SHADER].setUniformValue(generation_convexhull_points_mvplocation, mvp_matrix);
-        rendering_programs[VERTEX_SHADER].release();
-
-        rendering_programs[SEGMENT_SHADER].bind();
-        generation_convexhull_lines_mvplocation = rendering_programs[SEGMENT_SHADER].uniformLocation("mvp_matrix");
-        generation_convexhull_lines_color_location = rendering_programs[SEGMENT_SHADER].uniformLocation("color");
-        rendering_programs[SEGMENT_SHADER].setUniformValue(generation_convexhull_lines_mvplocation, mvp_matrix);
-        rendering_programs[SEGMENT_SHADER].release();
-
-        rendering_programs[SEGMENT_SHADER].bind();
-        intersection_convexhull_mvplocation = rendering_programs[SEGMENT_SHADER].uniformLocation("mvp_matrix");
-        intersection_convexhull_color_location = rendering_programs[SEGMENT_SHADER].uniformLocation("color");
-        rendering_programs[SEGMENT_SHADER].setUniformValue(intersection_convexhull_mvplocation, mvp_matrix);
-        rendering_programs[SEGMENT_SHADER].release();
-
-        rendering_programs[VERTEX_SHADER].bind();
-        intersection_convexhull_points_mvplocation = rendering_programs[VERTEX_SHADER].uniformLocation("mvp_matrix");
-        intersection_convexhull_points_color_location = rendering_programs[VERTEX_SHADER].uniformLocation("color");
-        intersection_convexhull_points_size_location = rendering_programs[VERTEX_SHADER].uniformLocation("Point_Size");
-        rendering_programs[VERTEX_SHADER].setUniformValue(intersection_convexhull_points_mvplocation, mvp_matrix);
-        rendering_programs[VERTEX_SHADER].release();
+        attrib_buffer_vertex(point_size_location, points_colorLocation, mvpLocation, mvp_matrix);
+        attrib_buffer_segment(segment_colorlocation, segment_mvpLocation, mvp_matrix);
+        attrib_buffer_vertex(intersection_points_size_location, intersection_points_color_location, intersection_points_mvplocation, mvp_matrix);
+        attrib_buffer_segment(intersection_line_color_location, intersection_line_mvplocation, mvp_matrix);
+        attrib_buffer_vertex(generation_intersection_points_size_location, generation_intersection_points_color_location, generation_intersection_points_mvplocation, mvp_matrix);
+        attrib_buffer_segment(intersection_interval_color, intersection_interval_mvplocation, mvp_matrix);
+        attrib_buffer_vertex(generation_convexhull_points_size_location, generation_convexhull_points_color_location, generation_convexhull_points_mvplocation, mvp_matrix);
+        attrib_buffer_segment(generation_convexhull_lines_color_location, generation_convexhull_lines_mvplocation, mvp_matrix);
+        attrib_buffer_vertex(intersection_convexhull_points_size_location, intersection_convexhull_points_color_location, intersection_convexhull_points_mvplocation, mvp_matrix);
+        attrib_buffer_segment(intersection_convexhull_color_location, intersection_convexhull_mvplocation, mvp_matrix);
+        attrib_buffer_vertex(generation_polygon_points_size_location, generation_polygon_points_color_location, generation_polygon_points_mvplocation, mvp_matrix);
+        attrib_buffer_segment(generation_polygon_lines_color_location, generation_polygon_lines_mvplocation, mvp_matrix);
     }
 
 /// @}
@@ -438,6 +416,23 @@
 /// @}
 /// @name Private Operatiors
 /// @{
+    void Gl_Display::attrib_buffer_vertex(int& psl, int& pcl, int& mvpl, QMatrix4x4& mvp_matrix)
+    {
+        rendering_programs[VERTEX_SHADER].bind();
+        pcl = rendering_programs[VERTEX_SHADER].uniformLocation("color");
+        psl = rendering_programs[VERTEX_SHADER].uniformLocation("Point_Size");
+        mvpl = rendering_programs[VERTEX_SHADER].uniformLocation("mvp_matrix");
+        rendering_programs[VERTEX_SHADER].setUniformValue(mvpl, mvp_matrix);
+        rendering_programs[VERTEX_SHADER].release();
+    }
+    void Gl_Display::attrib_buffer_segment(int& scl, int& mvpl, QMatrix4x4& mvp_matrix)
+    {
+        rendering_programs[SEGMENT_SHADER].bind();
+        mvpl = rendering_programs[SEGMENT_SHADER].uniformLocation("mvp_matrix");
+        scl = rendering_programs[SEGMENT_SHADER].uniformLocation("color");
+        rendering_programs[SEGMENT_SHADER].setUniformValue(mvpl, mvp_matrix);
+        rendering_programs[SEGMENT_SHADER].release();
+    }
 /// @}
 /// @name Private Operations
 /// @{

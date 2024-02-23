@@ -36,6 +36,9 @@ namespace MyCG
             m_generation_convexhull_segments.clear();
             m_intersection_convexhull.clear();
             m_intersection_convexhull_points.clear();
+            m_generation_polygon_points.clear();
+            m_generation_polygon_segments.clear();
+            m_generation_polygon_2.clear();
             m_empty = true;
         }
 
@@ -208,7 +211,62 @@ namespace MyCG
                 outfile << m_generation_convexhull_segments[begin+29] << std::endl;
                 begin+=30;
             }
+            outfile.close();
+            file.close();
+        }
 
+        void Model::generate_polygon()
+        {
+            clean();
+
+            static int count = 0;
+            count = 1;
+            std::ofstream outfile;
+            std::ifstream file;
+            if(count == 1)
+            {
+                file.open("../../res/TestPoints/Generation_Polygon.chf");
+                if(!file.is_open())
+                {
+                    outfile.open("../../res/TestPoints/Generation_Polygon.chf");
+                    if(!outfile.is_open())
+                        std::cout << "Error opening file" << std::endl;
+                }else
+                {
+                    file.close();
+                }
+            }
+
+            typedef std::list<Point_2> Container;
+            // typedef CGAL::Creator_uniform_2<int, Point_2>             Creator;
+            typedef CGAL::Random_points_in_square_2<Point_2> Point_generator;
+            Container point_set;
+            CGAL::Random rand;
+
+            // int size = rand.get_int(4, 100);
+            // CGAL::copy_n_unique(Point_generator(2.f), 
+            //                     100, 
+            //                     std::back_inserter(point_set));
+            CGAL::random_polygon_2(50, 
+                                   std::back_inserter(m_generation_polygon_2), 
+                                   Point_generator(2.f));
+            std::cout << "Simple : " << m_generation_polygon_2.is_simple() << std::endl;
+            
+            for(auto vertex_iter = m_generation_polygon_2.vertices_begin();vertex_iter != m_generation_polygon_2.vertices_end();++vertex_iter)
+            {
+                Point_2 p(vertex_iter->x(),vertex_iter->y());
+                m_generation_polygon_points.push_back(p);
+                outfile << m_generation_polygon_points.back() << std::endl;
+            }
+
+            for(auto edge_iter = m_generation_polygon_2.edges_begin();edge_iter != m_generation_polygon_2.edges_end();++edge_iter)
+            {
+                Point_2 p1(edge_iter->source().x(), edge_iter->source().y());
+                Point_2 p2(edge_iter->target().x(), edge_iter->target().y());
+                m_generation_polygon_segments.push_back(Segment_2(p1, p2));
+            }
+
+            outfile.close();
             file.close();
         }
 
@@ -311,7 +369,15 @@ namespace MyCG
             if(!m_intersection_convexhull_points.empty())
                 for(int i=0;i<m_intersection_convexhull_points.size();++i)
                     temp_p.push_back(m_intersection_convexhull_points[i]);
-
+            if(!m_generation_polygon_points.empty())
+                for(int i=0;i<m_generation_polygon_points.size();++i)
+                    temp_p.push_back(m_generation_polygon_points[i]);
+            if(!m_generation_polygon_segments.empty())
+                for(int i=0;i<m_generation_polygon_segments.size();++i)
+                {
+                    temp_p.push_back(m_generation_polygon_segments[i].target());
+                    temp_p.push_back(m_generation_polygon_segments[i].source());
+                }
 
             Bbox_2 bbox = CGAL::bounding_box(temp_p.begin(), temp_p.end());
             double centerx = (bbox.xmin() + bbox.xmax()) / 2.0;

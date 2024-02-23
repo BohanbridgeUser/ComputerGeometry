@@ -16,6 +16,7 @@
 #include <CGAL/Polyhedron_3.h>
 #include <CGAL/Polyhedron_items_with_id_3.h>
 #include <CGAL/bounding_box.h>
+#include <CGAL/Polygon_2.h>
 
 #include <CGAL/function_objects.h>
 #include <CGAL/Join_input_iterator.h>
@@ -23,6 +24,9 @@
 #include <CGAL/Combination_enumerator.h>
 #include <CGAL/intersections.h>
 #include <CGAL/random_convex_set_2.h>
+#include <CGAL/random_polygon_2.h>
+#include <CGAL/Random.h>
+#include <CGAL/algorithm.h>
 
 namespace MyCG
 {
@@ -46,7 +50,9 @@ namespace MyCG
     typedef CGAL::Line_2<Kernel>
                                                                     Line_2;
     typedef CGAL::Line_3<Kernel>
-                                                                    Line_3;                                                        
+                                                                    Line_3;
+    typedef CGAL::Polygon_2<Kernel>
+                                                                    Polygon_2;                                                        
     typedef CGAL::Vector_3<Kernel>                                  
                                                                     Vector;
     typedef CGAL::Polyhedron_3<Kernel,CGAL::Polyhedron_items_with_id_3>
@@ -70,7 +76,9 @@ namespace MyCG
     typedef std::vector<Segment_2> 
                                                                     DataSegments_2;
     typedef std::vector<Segment_3> 
-                                                                    DataSegments_3;                                                                                                                        
+                                                                    DataSegments_3; 
+    typedef std::vector<Polygon_2>
+                                                                    DataPolygon_2;                                                                                                                       
 }
 
 #endif // _DEFINE_H_

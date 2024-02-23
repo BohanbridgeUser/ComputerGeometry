@@ -80,6 +80,7 @@
     <addaction name="actionPoints"/>
     <addaction name="menuSegments"/>
     <addaction name="actionConvexHulls"/>
+    <addaction name="actionPolygon"/>
    </widget>
    <widget class="QMenu" name="menuFunction">
     <property name="title">
@@ -293,6 +294,16 @@
   <action name="actionConvexHull_Edge_Chasing">
    <property name="text">
     <string>ConvexHull_Edge_Chasing</string>
+   </property>
+  </action>
+  <action name="actionConvexHull_BO">
+   <property name="text">
+    <string>ConvexHull_BO</string>
+   </property>
+  </action>
+  <action name="actionPolygon">
+   <property name="text">
+    <string>Polygon</string>
    </property>
   </action>
  </widget>

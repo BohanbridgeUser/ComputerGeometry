@@ -49,7 +49,13 @@ struct Draw_Options
 
     float Intersection_ConvexHull_Size = 2.0f;
     QColor intersection_convexhull_color = QColor(220.f, 216.f, 0.f);
+
+    float Generation_Polygon_Point_Size = 4.0f;
+    QColor generation_polygon_point_color = QColor(220.f, 216.f, 0.f);
+    float Generation_Polygon_Segment_Size = 1.0f;
+    QColor generation_polygon_color = QColor(123.f, 104.f, 238.f);
 };
+
 class Gl_Display
 {
     public:
@@ -81,6 +87,8 @@ class Gl_Display
                 GENERATION_CONVEXHULL_LINES,
                 INTERSECTION_CONVEXHULL_POINTS,
                 INTERSECTION_CONVEXHULL_LINES,
+                GENERATION_POLYGON_POINTS,
+                GENERATION_POLYGON_LINES,
                 MESH,
                 SIZE_OF_MODE
             };
@@ -123,6 +131,8 @@ class Gl_Display
             void render_generation_convexhull_lines();
             void render_intersection_convexhull_points();
             void render_intersection_convexhull();
+            void render_generation_polygon_points();
+            void render_generation_polygon_segments();
         /// @}
         /// @name Access
         /// @{
@@ -136,7 +146,8 @@ class Gl_Display
             DataF& Get_pos_generation_convexhull_lines() { return pos_generation_convexhull_lines; }
             DataF& Get_pos_intersection_convexhull() { return pos_intersection_convexhull; }
             DataF& Get_pos_intersection_convexhull_points() { return pos_intersection_convexhull_points; }
-
+            DataF& Get_pos_generation_polygon_points() { return pos_generation_polygon_points; }
+            DataF& Get_pos_generation_polygon_lines() { return pos_generation_polygon_lines; }
 
         /// @}
         /// @name Inquiry
@@ -201,7 +212,11 @@ class Gl_Display
             int                           intersection_convexhull_points_size_location;
             int                           intersection_convexhull_points_color_location;
             int                           intersection_convexhull_points_mvplocation;
-
+            int                           generation_polygon_points_size_location;
+            int                           generation_polygon_points_color_location;
+            int                           generation_polygon_points_mvplocation;
+            int                           generation_polygon_lines_color_location;
+            int                           generation_polygon_lines_mvplocation;
 
             /* data */
             DataF                         pos_points;
@@ -214,6 +229,8 @@ class Gl_Display
             DataF                         pos_generation_convexhull_lines;
             DataF                         pos_intersection_convexhull;
             DataF                         pos_intersection_convexhull_points;
+            DataF                         pos_generation_polygon_points;
+            DataF                         pos_generation_polygon_lines;
 
             /* OpenGL Buffers */
             enum VBO{
@@ -227,6 +244,8 @@ class Gl_Display
                 GENERATION_CONVEXHULL_LINES_LOCATION,
                 INTERSECTION_CONVEXHULL_LOCATION,
                 INTERSECTION_CONVEXHULL_POINTS_LOCATION,
+                GENERATION_POLYGON_POINTS_LOCATION,
+                GENERATION_POLYGON_LINES_LOCATION,
                 SIZE_OF_VBO
             };
             enum VAO{
@@ -240,6 +259,8 @@ class Gl_Display
                 GENERATION_CONVEXHULL_LINES_VAO,
                 INTERSECTION_CONVEXHULL_VAO,
                 INTERSECTION_CONVEXHULL_POINTS_VAO,
+                GENERATION_POLYGON_POINTS_VAO,
+                GENERATION_POLYGON_LINES_VAO,
                 SIZE_OF_VAO
             };
             enum SHADER{
@@ -256,6 +277,8 @@ class Gl_Display
         /// @}
         /// @name Private Operatiors
         /// @{
+            void attrib_buffer_vertex(int& psl, int& pcl, int& mvpl, QMatrix4x4& mvp_matrix);
+            void attrib_buffer_segment(int& scl, int& mvpl, QMatrix4x4& mvp_matrix);
         /// @}
         /// @name Private Operations
         /// @{

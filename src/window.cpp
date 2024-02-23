@@ -179,6 +179,12 @@
         update();
     }
 
+    void MainWindow::on_actionPolygon_triggered()
+    {
+        m_glviewer->generate_polygon();
+        update();
+    }
+
     // ConvexHull
     void MainWindow::on_actionConvexHull_EP_triggered()
     {
@@ -241,6 +247,7 @@
         m_glviewer->convexhulls_edge_chasing();
         update();
     }
+
 
 /// @}
 

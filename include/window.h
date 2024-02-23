@@ -33,6 +33,7 @@ protected:
         void on_actionPoints_triggered();
         void on_actionOn_Circle_triggered();
         void on_actionFrom_points_triggered();
+        void on_actionPolygon_triggered();
 
         /* My function */
         // ConvexHull
@@ -48,6 +49,9 @@ protected:
         void on_actionConvexHulls_triggered();
         void on_actionConvexHull_2_triggered();
         void on_actionConvexHull_Edge_Chasing_triggered();
+
+        //Triangulation
+
 };
 
 
