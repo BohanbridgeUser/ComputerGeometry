@@ -4,6 +4,8 @@
 #include <stack>
 #include <queue>
 #include <set>
+#include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <iterator>
 
@@ -1014,7 +1016,7 @@ namespace MyCG
                 a = fun_advance(a,begin1,end1);
                 b = fun_advance(b,begin2,end2);
             }
-            else if(determinant >= 0)
+            else if(GTEQZERO(determinant))
             {
                 if(qHP)
                     a = Advance1(a, aa, in_flag == PIN, pe);
@@ -1076,10 +1078,10 @@ namespace MyCG
             segments.push_back(Segment_2(rpoints[i],rpoints[i+1]));
         segments.push_back(Segment_2(rpoints[rpoints.size()-1],rpoints[0]));
 
-        std::vector<int> ipoints;
+        std::vector<int> event_points;
         for(int i=0;i<rpoints.size();++i)
-            ipoints.push_back(i);
-        std::sort(ipoints.begin(),ipoints.end(), [&rpoints](int i1, int i2)->bool{
+            event_points.push_back(i);
+        std::sort(event_points.begin(),event_points.end(), [&rpoints](int i1, int i2)->bool{
             if(GTEQZERO(rpoints[i1].y()-rpoints[i2].y())) return true;
             else return false;
         });
@@ -1088,12 +1090,198 @@ namespace MyCG
         
     }
 
+    std::vector<std::vector<int>> Monotone_Polygons_Recursive(DataPoints_2& rpoints,
+                                                              std::vector<std::vector<int>>& ipolygon)
+    {
+        std::vector<std::vector<int>> monotone_polygons;
+        for(int i=0;i<ipolygon.size();++i)
+        {
+            /* 1.sort all points by y coordinate */
+            const std::vector<int>& polygon = ipolygon[i];
+            std::vector<int> event_points;
+            for(int j=0;j<polygon.size();++j)
+                event_points.push_back(j);
+            std::sort(event_points.begin(),event_points.end(), [&rpoints,&polygon](int i1, int i2)->bool{
+                if(GTEQZERO(rpoints[polygon[i1]].y()-rpoints[polygon[i2]].y())) return true;
+                else return false;
+            });
+
+            /* 2.monotone polygon */
+            struct Trapezoid
+            {
+                int indices[4];
+            };
+            struct Data
+            {
+                std::vector<int>        indices;
+                std::vector<int>        i_Trapes;
+            };  
+            std::unordered_map<int,Trapezoid>   trapezoids;
+            std::queue<int>                     inflect_point;
+            std::unordered_map<int,Data>        my_dict;
+            int flag = 0;
+            for(int j=0;j<event_points.size();++j)
+            {
+                int index = polygon[event_points[j]];
+                int index_last = (event_points[j]==0)? polygon[polygon.size()-1]:polygon[event_points[j]-1];
+                int index_next = (event_points[j]==polygon.size()-1)? polygon[0]:polygon[event_points[j]+1];
+                if(rpoints[index].y() > rpoints[index_last].y() && rpoints[index].y() > rpoints[index_next].y())
+                {
+                    if(ToLeft(rpoints[index_last],rpoints[index],rpoints[index_next]))
+                    {
+                        int key = trapezoids.size();
+                        trapezoids.insert(std::pair<int,Trapezoid>(trapezoids.size(),Trapezoid{index_last,index,index_next, index}));
+                        my_dict[index_last].indices.push_back(index);
+                        my_dict[index_last].i_Trapes.push_back(key);
+                        my_dict[index_next].indices.push_back(index);
+                        my_dict[index_next].i_Trapes.push_back(key);
+                    }
+                    else
+                    {
+                        int begin = inflect_point.front();
+                        inflect_point.pop();
+                        int end = index;
+                        std::vector<std::vector<int>> temp_polygons(2,std::vector<int>());
+                        for(int k=begin;k!=end;k=(k+1)%polygon.size())
+                            temp_polygons[0].push_back(polygon[k]);
+                        for(int k=end;k!=begin;k=(k+1)%polygon.size())
+                            temp_polygons[1].push_back(polygon[k]);
+                        std::vector<std::vector<int>> temp_monotone_polygons = Monotone_Polygons_Recursive(rpoints,temp_polygons);
+                        for(int k=0;k<temp_monotone_polygons.size();++k)
+                            monotone_polygons.push_back(temp_monotone_polygons[k]);
+                        flag = 1;
+                        break;
+                    }
+                }
+                else if(rpoints[index].y() < rpoints[index_last].y() && rpoints[index].y() < rpoints[index_next].y())
+                {
+                    if(!ToLeft(rpoints[index_last],rpoints[index],rpoints[index_next]))
+                    {
+                        inflect_point.push(index);
+                        Trapezoid* T1 = &trapezoids[my_dict[index].i_Trapes[0]];
+                        Trapezoid* T2 = &trapezoids[my_dict[index].i_Trapes[1]];
+                        int key = trapezoids.size();
+                        if(T1->indices[0] == index || T2->indices[2] == index)
+                        {
+                            trapezoids.insert(std::pair<int,Trapezoid>(key,Trapezoid{T2->indices[0],T2->indices[1],T1->indices[2],T1->indices[3]}));
+                            for(int k=0;k<my_dict[T2->indices[0]].i_Trapes.size();++k)
+                            {
+                                if(my_dict[T2->indices[0]].i_Trapes[k] == my_dict[index].i_Trapes[1])
+                                {
+                                    my_dict[T2->indices[0]].i_Trapes[k] = key;
+                                    trapezoids.erase(my_dict[index].i_Trapes[1]);
+                                    break;
+                                }
+                            }
+                            for(int k=0;k<my_dict[T1->indices[2]].i_Trapes.size();++k)
+                            {
+                                if(my_dict[T1->indices[2]].i_Trapes[k] == my_dict[index].i_Trapes[0])
+                                {
+                                    my_dict[T1->indices[2]].i_Trapes[k] = key;
+                                    trapezoids.erase(my_dict[index].i_Trapes[0]);
+                                    break;
+                                }
+                            }
+                        }
+                        else if(T1->indices[2] == index || T2->indices[0] == index)
+                        {
+                            trapezoids.insert(std::pair<int,Trapezoid>(key,Trapezoid{T1->indices[0],T1->indices[1],T2->indices[2],T2->indices[3]}));
+                            for(int k=0;k<my_dict[T1->indices[0]].i_Trapes.size();++k)
+                            {
+                                if(my_dict[T1->indices[0]].i_Trapes[k] == my_dict[index].i_Trapes[0])
+                                {
+                                    my_dict[T1->indices[0]].i_Trapes[k] = key;
+                                    trapezoids.erase(my_dict[index].i_Trapes[0]);
+                                    break;
+                                }
+                            }
+                            for(int k=0;k<my_dict[T2->indices[2]].i_Trapes.size();++k)
+                            {
+                                if(my_dict[T2->indices[2]].i_Trapes[k] == my_dict[index].i_Trapes[1])
+                                {
+                                    my_dict[T2->indices[2]].i_Trapes[k] = key;
+                                    trapezoids.erase(my_dict[index].i_Trapes[1]);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        trapezoids.erase(my_dict[index].i_Trapes[0]);
+                    }
+                }
+                else if(rpoints[index].y() < rpoints[index_last].y() && rpoints[index].y() > rpoints[index_next].y())
+                {
+                    if(inflect_point.empty())
+                    {
+                        Trapezoid* T = &trapezoids[my_dict[index].i_Trapes[0]];
+                        T->indices[0] = index_next;
+                        T->indices[1] = index;
+                        my_dict[index_next].indices.push_back(index);
+                        my_dict[index_next].i_Trapes.push_back(my_dict[index].i_Trapes[0]);
+                    }
+                    else
+                    {
+                        int begin = inflect_point.front();
+                        inflect_point.pop();
+                        int end = index;
+                        std::vector<std::vector<int>> temp_polygons(2,std::vector<int>());
+                        for(int k=begin;k!=end;k=(k+1)%polygon.size())
+                            temp_polygons[0].push_back(polygon[k]);
+                        for(int k=end;k!=begin;k=(k+1)%polygon.size())
+                            temp_polygons[1].push_back(polygon[k]);
+                        std::vector<std::vector<int>> temp_monotone_polygons = Monotone_Polygons_Recursive(rpoints,temp_polygons);
+                        for(int k=0;k<temp_monotone_polygons.size();++k)
+                            monotone_polygons.push_back(temp_monotone_polygons[k]);
+                        flag = 1;
+                        break;
+                    }
+                }
+                else if(rpoints[index].y() > rpoints[index_last].y() && rpoints[index].y() < rpoints[index_next].y())
+                {
+                    if(inflect_point.empty())
+                    {
+                        Trapezoid* T = &trapezoids[my_dict[index].i_Trapes[0]];
+                        T->indices[0] = index_last;
+                        T->indices[1] = index;
+                        my_dict[index_last].indices.push_back(index);
+                        my_dict[index_last].i_Trapes.push_back(my_dict[index].i_Trapes[0]);
+                    }
+                    else
+                    {
+                        int begin = inflect_point.front();
+                        inflect_point.pop();
+                        int end = index;
+                        std::vector<std::vector<int>> temp_polygons(2,std::vector<int>());
+                        for(int k=begin;k!=end;k=(k+1)%polygon.size())
+                            temp_polygons[0].push_back(polygon[k]);
+                        for(int k=end;k!=begin;k=(k+1)%polygon.size())
+                            temp_polygons[1].push_back(polygon[k]);
+                        std::vector<std::vector<int>> temp_monotone_polygons = Monotone_Polygons_Recursive(rpoints,temp_polygons);
+                        for(int k=0;k<temp_monotone_polygons.size();++k)
+                            monotone_polygons.push_back(temp_monotone_polygons[k]);
+                        flag = 1;
+                        break;
+                    }
+                }   
+            }
+            if(flag == 1)
+                return monotone_polygons;
+            else
+                return ipolygon;
+        }  
+    }
+
     void Triangulation::Triangulation_Monotone(const DataPoints_2& rpoints, DataPoints_2& triangulations)
     {
         /* 1. monotone polygon */
         DataPoints_2 points(rpoints.begin(),rpoints.end());
-        std::vector<std::vector<int>> monotone_polygons;
-        Monotone_Polygons(points, monotone_polygons);
+        std::vector<std::vector<int>> monotone_polygons(1,std::vector<int>());
+        for(int i=0;i<points.size();++i)
+            monotone_polygons[0].push_back(i);
+        Monotone_Polygons_Recursive(points, monotone_polygons);
+        // Monotone_Polygons(points, monotone_polygons);
 
         /* 2. triangulation */
 

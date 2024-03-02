@@ -196,8 +196,11 @@ namespace MyCG
     {
         private:
             static void Monotone_Polygons(DataPoints_2& rpoints, std::vector<std::vector<int>>& rmonotone_polygons);
+            static std::vector<std::vector<int>> Monotone_Polygons_Recursive(DataPoints_2& rpoints,
+                                                                std::vector<std::vector<int>>& ipolygon);
         public:
             static void Triangulation_Monotone(const DataPoints_2& rpoints, DataPoints_2& triangulations);
+    
     };
 
 }
