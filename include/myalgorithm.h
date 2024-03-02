@@ -194,8 +194,10 @@ namespace MyCG
 
     class Triangulation
     {
+        private:
+            static void Monotone_Polygons(DataPoints_2& rpoints, std::vector<std::vector<int>>& rmonotone_polygons);
         public:
-            static void Triangulation_Monotone(const DataPoints_2& rpoints);
+            static void Triangulation_Monotone(const DataPoints_2& rpoints, DataPoints_2& triangulations);
     };
 
 }

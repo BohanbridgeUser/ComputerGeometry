@@ -105,8 +105,15 @@
      <addaction name="actionConvexHull_2"/>
      <addaction name="actionConvexHull_Edge_Chasing"/>
     </widget>
+    <widget class="QMenu" name="menuTriangulation">
+     <property name="title">
+      <string>Triangulation</string>
+     </property>
+     <addaction name="actionMonotone"/>
+    </widget>
     <addaction name="menuConvexHull"/>
     <addaction name="menuIntersection"/>
+    <addaction name="menuTriangulation"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -304,6 +311,11 @@
   <action name="actionPolygon">
    <property name="text">
     <string>Polygon</string>
+   </property>
+  </action>
+  <action name="actionMonotone">
+   <property name="text">
+    <string>Monotone</string>
    </property>
   </action>
  </widget>

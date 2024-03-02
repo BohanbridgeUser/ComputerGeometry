@@ -51,7 +51,7 @@ protected:
         void on_actionConvexHull_Edge_Chasing_triggered();
 
         //Triangulation
-
+        void on_actionMonotone_triggered();
 };
 
 

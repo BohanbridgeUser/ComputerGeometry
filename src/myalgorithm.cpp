@@ -1068,9 +1068,35 @@ namespace MyCG
         std::cout << convexhull_intersection_points.size() << std::endl;
     }
 
-    void Triangulation::Triangulation_Monotone(const DataPoints_2& rpoints)
+    void Triangulation::Monotone_Polygons(DataPoints_2& rpoints, std::vector<std::vector<int>>& rmonotone_polygons)
     {
+        /* 1.sort all points by y coordinate */
+        DataSegments_2 segments;
+        for(int i=0;i<rpoints.size()-1;++i)
+            segments.push_back(Segment_2(rpoints[i],rpoints[i+1]));
+        segments.push_back(Segment_2(rpoints[rpoints.size()-1],rpoints[0]));
+
+        std::vector<int> ipoints;
+        for(int i=0;i<rpoints.size();++i)
+            ipoints.push_back(i);
+        std::sort(ipoints.begin(),ipoints.end(), [&rpoints](int i1, int i2)->bool{
+            if(GTEQZERO(rpoints[i1].y()-rpoints[i2].y())) return true;
+            else return false;
+        });
         
+        /* 2.monotone polygon */
+        
+    }
+
+    void Triangulation::Triangulation_Monotone(const DataPoints_2& rpoints, DataPoints_2& triangulations)
+    {
+        /* 1. monotone polygon */
+        DataPoints_2 points(rpoints.begin(),rpoints.end());
+        std::vector<std::vector<int>> monotone_polygons;
+        Monotone_Polygons(points, monotone_polygons);
+
+        /* 2. triangulation */
+
     }
 
 }

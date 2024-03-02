@@ -71,6 +71,9 @@ namespace MyCG
                 DataPoints_2& Get_Generation_Polygon_Points() { return m_generation_polygon_points; }
                 DataSegments_2& Get_Generation_Polygon_Segments() { return m_generation_polygon_segments; }
 
+                /* Triangulation */
+                DataPoints_2& Get_Triangulations() { return m_triangulations; }
+
                 /* Camera */
                 Point_3& Get_Center() { return m_center; }
                 double Get_Radius() { return m_radius; }
@@ -140,6 +143,9 @@ namespace MyCG
                 DataPoints_2            m_generation_polygon_points;
                 Polygon_2               m_generation_polygon_2;
                 DataSegments_2          m_generation_polygon_segments;
+
+                /* Triangulation */
+                DataPoints_2            m_triangulations;
 
                 /* Mesh */ 
                 DataPoints_3            m_points_3;

@@ -54,6 +54,9 @@ struct Draw_Options
     QColor generation_polygon_point_color = QColor(220.f, 216.f, 0.f);
     float Generation_Polygon_Segment_Size = 1.0f;
     QColor generation_polygon_color = QColor(123.f, 104.f, 238.f);
+
+    float Triangulation_Monotone_Segment_Size = 2.0f;
+    QColor triangulation_monotone_segment_color = QColor(255.f, 0.f, 0.f);
 };
 
 class Gl_Display
@@ -133,6 +136,7 @@ class Gl_Display
             void render_intersection_convexhull();
             void render_generation_polygon_points();
             void render_generation_polygon_segments();
+            void render_triangulation_monotone_segments();
         /// @}
         /// @name Access
         /// @{
@@ -148,7 +152,8 @@ class Gl_Display
             DataF& Get_pos_intersection_convexhull_points() { return pos_intersection_convexhull_points; }
             DataF& Get_pos_generation_polygon_points() { return pos_generation_polygon_points; }
             DataF& Get_pos_generation_polygon_lines() { return pos_generation_polygon_lines; }
-
+            DataF& Get_pos_triangulation_monotone_lines() { return pos_triangulation_monotone_lines; }
+            
         /// @}
         /// @name Inquiry
         /// @{
@@ -217,6 +222,8 @@ class Gl_Display
             int                           generation_polygon_points_mvplocation;
             int                           generation_polygon_lines_color_location;
             int                           generation_polygon_lines_mvplocation;
+            int                           triangulation_monotone_segment_color_location;
+            int                           triangulation_monotone_segment_mvplocation;
 
             /* data */
             DataF                         pos_points;
@@ -231,7 +238,7 @@ class Gl_Display
             DataF                         pos_intersection_convexhull_points;
             DataF                         pos_generation_polygon_points;
             DataF                         pos_generation_polygon_lines;
-
+            DataF                         pos_triangulation_monotone_lines;
             /* OpenGL Buffers */
             enum VBO{
                 POINTS_LOCATION = 0,
@@ -246,6 +253,7 @@ class Gl_Display
                 INTERSECTION_CONVEXHULL_POINTS_LOCATION,
                 GENERATION_POLYGON_POINTS_LOCATION,
                 GENERATION_POLYGON_LINES_LOCATION,
+                TRIANGULATION_MONOTONE_LINES_LOCATION,
                 SIZE_OF_VBO
             };
             enum VAO{
@@ -261,6 +269,7 @@ class Gl_Display
                 INTERSECTION_CONVEXHULL_POINTS_VAO,
                 GENERATION_POLYGON_POINTS_VAO,
                 GENERATION_POLYGON_LINES_VAO,
+                TRIANGULATION_MONOTONE_LINES_VAO,
                 SIZE_OF_VAO
             };
             enum SHADER{

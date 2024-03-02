@@ -75,6 +75,9 @@ class glViewer : public CGAL::QGLViewer
             void convexhulls_intersection(std::vector<std::vector<int>>& intersections);
             void convexhulls_edge_chasing();
 
+            // Triangulation
+            void monotone_triangulation();
+
             void clean();
         /// @}
         /// @name Operations

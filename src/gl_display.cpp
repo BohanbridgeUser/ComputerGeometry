@@ -48,6 +48,7 @@
         pos_intersection_convexhull_points.clear();
         pos_generation_polygon_lines.clear();
         pos_generation_polygon_points.clear();
+        pos_triangulation_monotone_lines.clear();
         gl_buffer_init = false;
         for(int i=0;i<SIZE_OF_MODE;++i)
             m_mode[i] = false;
@@ -222,6 +223,17 @@
         rendering_programs[SEGMENT_SHADER].release();
     }
 
+    void Gl_Display::render_triangulation_monotone_segments()
+    {
+        gl->glEnable(GL_LINE_SMOOTH);
+        vao[TRIANGULATION_MONOTONE_LINES_VAO].bind();
+        rendering_programs[SEGMENT_SHADER].bind();
+        rendering_programs[SEGMENT_SHADER].setUniformValue(triangulation_monotone_segment_color_location, options.triangulation_monotone_segment_color);
+        gl->glLineWidth(options.Triangulation_Monotone_Segment_Size);
+        gl->glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(pos_generation_polygon_lines.size() / 3));
+        rendering_programs[SEGMENT_SHADER].release();
+    }
+
     void Gl_Display::initializeGL()
     {
         gl = new QOpenGLFunctions();
@@ -284,6 +296,7 @@
         render_functions.emplace_back(std::bind(&Gl_Display::render_intersection_convexhull_points,this));
         render_functions.emplace_back(std::bind(&Gl_Display::render_generation_polygon_points,this));
         render_functions.emplace_back(std::bind(&Gl_Display::render_generation_polygon_segments,this));
+        render_functions.emplace_back(std::bind(&Gl_Display::render_triangulation_monotone_segments,this));
     }
 
     void Gl_Display::check_buffer()
@@ -339,6 +352,8 @@
                               vbo[GENERATION_POLYGON_POINTS_LOCATION], pos_generation_polygon_points, "pos_vertex");
             init_buffer(rendering_programs[SEGMENT_SHADER],vao[GENERATION_POLYGON_LINES_VAO],
                               vbo[GENERATION_POLYGON_LINES_LOCATION], pos_generation_polygon_lines, "vertex");
+            init_buffer(rendering_programs[SEGMENT_SHADER],vao[TRIANGULATION_MONOTONE_LINES_VAO],
+                              vbo[TRIANGULATION_MONOTONE_LINES_LOCATION], pos_triangulation_monotone_lines, "vertex");
         }
         gl_buffer_init = true;
     }
@@ -377,6 +392,7 @@
         attrib_buffer_segment(intersection_convexhull_color_location, intersection_convexhull_mvplocation, mvp_matrix);
         attrib_buffer_vertex(generation_polygon_points_size_location, generation_polygon_points_color_location, generation_polygon_points_mvplocation, mvp_matrix);
         attrib_buffer_segment(generation_polygon_lines_color_location, generation_polygon_lines_mvplocation, mvp_matrix);
+        attrib_buffer_segment(triangulation_monotone_segment_color_location, triangulation_monotone_segment_mvplocation, mvp_matrix);
     }
 
 /// @}

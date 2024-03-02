@@ -248,6 +248,10 @@
         update();
     }
 
-
+    void MainWindow::on_actionMonotone_triggered()
+    {
+        m_glviewer->monotone_triangulation();
+        update();
+    }
 /// @}
 
