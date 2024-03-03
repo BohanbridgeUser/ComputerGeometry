@@ -87,6 +87,7 @@ class glViewer : public CGAL::QGLViewer
             bool load_file_off2(const std::string& filename);
             bool load_file_int(const std::string& filename);
             bool load_file_chf(const std::string& filename);
+            bool load_file_tp(const std::string& filename);
             void adjustCamera();
         /// @}
         /// @name Access

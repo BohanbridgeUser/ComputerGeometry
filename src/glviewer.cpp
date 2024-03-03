@@ -126,6 +126,28 @@
             return false;
     }
 
+    bool glViewer::load_file_tp(const std::string& filename)
+    {
+        clean();
+        for(int i=11;i<13;i++)
+            m_gl_display->setdisplaymode(i);
+        
+        if(m_model->load_file_tp(filename))
+        {
+            std::cout << "open cp file !\n";
+            DataPoints_2& points_2 = m_model->Get_Generation_Polygon_Points();
+            DataSegments_2& segments_2 = m_model->Get_Generation_Polygon_Segments();
+            points_data_to_display(points_2, m_gl_display->Get_pos_generation_polygon_points());
+            segments_data_to_display(segments_2, m_gl_display->Get_pos_generation_polygon_lines());
+            m_model->flip_empty();
+            adjustCamera();
+            m_gl_display->check_buffer();
+            return true;
+        }
+        else
+            return false;
+    }
+
     void glViewer::adjustCamera() 
     {
         m_model->calculate_Bbox_2();

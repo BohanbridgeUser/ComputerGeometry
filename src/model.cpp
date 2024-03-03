@@ -126,6 +126,26 @@ namespace MyCG
             return true;
         }
 
+        bool Model::load_file_tp(const std::string& filename)
+        {
+            clean();
+
+            std::ifstream file(filename);
+            if(!file.is_open())
+            {
+                std::cout << "Error opening file" << std::endl;
+                return false;
+            }
+
+            double loc_x, loc_y;
+            while(file >> loc_x >> loc_y)
+                m_generation_polygon_points.push_back(Point_2(loc_x, loc_y));
+            for(int i=0;i<m_generation_polygon_points.size()-1;++i)
+                m_generation_polygon_segments.push_back(Segment_2(m_generation_polygon_points[i], m_generation_polygon_points[i+1]));
+            m_generation_polygon_segments.push_back(Segment_2(m_generation_polygon_points.back(), m_generation_polygon_points.front()));
+            return true;
+        }
+
         /* Generation */
         void Model::generate_points()
         {
@@ -225,10 +245,10 @@ namespace MyCG
             std::ifstream file;
             if(count == 1)
             {
-                file.open("../../res/TestPoints/Generation_Polygon.chf");
+                file.open("../../res/TestPoints/Generation_Polygon.tp");
                 if(!file.is_open())
                 {
-                    outfile.open("../../res/TestPoints/Generation_Polygon.chf");
+                    outfile.open("../../res/TestPoints/Generation_Polygon.tp");
                     if(!outfile.is_open())
                         std::cout << "Error opening file" << std::endl;
                 }else
@@ -247,7 +267,7 @@ namespace MyCG
             // CGAL::copy_n_unique(Point_generator(2.f), 
             //                     100, 
             //                     std::back_inserter(point_set));
-            CGAL::random_polygon_2(50, 
+            CGAL::random_polygon_2(12, 
                                    std::back_inserter(m_generation_polygon_2), 
                                    Point_generator(2.f));
             std::cout << "Simple : " << m_generation_polygon_2.is_simple() << std::endl;

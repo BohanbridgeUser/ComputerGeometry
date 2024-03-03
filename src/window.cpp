@@ -133,6 +133,22 @@
                 m_information->setPlainText(QString::fromStdString(info));
             }   
         }
+        else if(suffix == "tp")
+        {
+            std::string info = "Loading file: " + filename.toStdString() + "\n";
+            m_information->setPlainText(QString::fromStdString(info));
+            if(m_glviewer->load_file_tp(filename.toStdString()))
+            {
+                std::string info = "File [ " + filename.toStdString() + " ] loaded.\n";
+                std::string details = "  Load Points with vertices \n";
+                m_information->setPlainText(QString::fromStdString(info+details));    
+            }
+            else
+            {
+                std::string info = "Failed load File [ " + filename.toStdString() + " ]!\n";
+                m_information->setPlainText(QString::fromStdString(info));
+            }   
+        }
         else
         {
             QMessageBox::warning(this, tr("Error"), tr("File format not supported"));

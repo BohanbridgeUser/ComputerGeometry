@@ -1090,10 +1090,11 @@ namespace MyCG
         
     }
 
-    std::vector<std::vector<int>> Monotone_Polygons_Recursive(DataPoints_2& rpoints,
-                                                              std::vector<std::vector<int>>& ipolygon)
+    std::vector<std::vector<int>> Triangulation::Monotone_Polygons_Recursive(DataPoints_2& rpoints,
+                                                                             std::vector<std::vector<int>>& ipolygon)
     {
         std::vector<std::vector<int>> monotone_polygons;
+        int flag = 0;
         for(int i=0;i<ipolygon.size();++i)
         {
             /* 1.sort all points by y coordinate */
@@ -1119,7 +1120,7 @@ namespace MyCG
             std::unordered_map<int,Trapezoid>   trapezoids;
             std::queue<int>                     inflect_point;
             std::unordered_map<int,Data>        my_dict;
-            int flag = 0;
+            
             for(int j=0;j<event_points.size();++j)
             {
                 int index = polygon[event_points[j]];
@@ -1130,7 +1131,8 @@ namespace MyCG
                     if(ToLeft(rpoints[index_last],rpoints[index],rpoints[index_next]))
                     {
                         int key = trapezoids.size();
-                        trapezoids.insert(std::pair<int,Trapezoid>(trapezoids.size(),Trapezoid{index_last,index,index_next, index}));
+                        Trapezoid  T = {index_last,index,index_next,index};
+                        trapezoids.insert({key,T});
                         my_dict[index_last].indices.push_back(index);
                         my_dict[index_last].i_Trapes.push_back(key);
                         my_dict[index_next].indices.push_back(index);
@@ -1150,7 +1152,7 @@ namespace MyCG
                         for(int k=0;k<temp_monotone_polygons.size();++k)
                             monotone_polygons.push_back(temp_monotone_polygons[k]);
                         flag = 1;
-                        break;
+                        continue;
                     }
                 }
                 else if(rpoints[index].y() < rpoints[index_last].y() && rpoints[index].y() < rpoints[index_next].y())
@@ -1235,7 +1237,7 @@ namespace MyCG
                         for(int k=0;k<temp_monotone_polygons.size();++k)
                             monotone_polygons.push_back(temp_monotone_polygons[k]);
                         flag = 1;
-                        break;
+                        continue;
                     }
                 }
                 else if(rpoints[index].y() > rpoints[index_last].y() && rpoints[index].y() < rpoints[index_next].y())
@@ -1262,15 +1264,15 @@ namespace MyCG
                         for(int k=0;k<temp_monotone_polygons.size();++k)
                             monotone_polygons.push_back(temp_monotone_polygons[k]);
                         flag = 1;
-                        break;
+                        continue;
                     }
                 }   
             }
-            if(flag == 1)
-                return monotone_polygons;
-            else
-                return ipolygon;
         }  
+        if(flag == 1)
+            return monotone_polygons;
+        else
+            return ipolygon;
     }
 
     void Triangulation::Triangulation_Monotone(const DataPoints_2& rpoints, DataPoints_2& triangulations)
@@ -1280,7 +1282,14 @@ namespace MyCG
         std::vector<std::vector<int>> monotone_polygons(1,std::vector<int>());
         for(int i=0;i<points.size();++i)
             monotone_polygons[0].push_back(i);
-        Monotone_Polygons_Recursive(points, monotone_polygons);
+        monotone_polygons = Monotone_Polygons_Recursive(points, monotone_polygons);
+    
+        for(int i=0;i<monotone_polygons.size();++i)
+        {
+            for(int j=0;j<monotone_polygons[i].size();++j)
+                triangulations.push_back(points[monotone_polygons[i][j]]);
+        }
+
         // Monotone_Polygons(points, monotone_polygons);
 
         /* 2. triangulation */
