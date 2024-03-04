@@ -195,11 +195,27 @@ namespace MyCG
     class Triangulation
     {
         private:
-            static void Monotone_Polygons(DataPoints_2& rpoints, std::vector<std::vector<int>>& rmonotone_polygons);
-            static std::vector<std::vector<int>> Monotone_Polygons_Recursive(DataPoints_2& rpoints,
-                                                                std::vector<std::vector<int>>& ipolygon);
+            struct segment_index
+            {
+                int begin;
+                int end;
+            };
+            struct Trapezoid{
+                segment_index Left;
+                segment_index Right;
+            };
+            class cmp_Trapezoid
+            {
+                public:
+                    static DataPoints_2* p_points;
+                    bool operator()(const Trapezoid& rtrapezoid1, const Trapezoid& rtrapezoid2) const;
+            };
+            static std::vector<std::vector<int>> Monotone_Polygons(DataPoints_2& rpoints,
+                                                                   std::vector<std::vector<int>>& ipolygons);
+            static std::vector<std::vector<int>> Triangulation_Polygons(const DataPoints_2& rpoints,
+                                                                        std::vector<int>& ipolygons);
         public:
-            static void Triangulation_Monotone(const DataPoints_2& rpoints, DataPoints_2& triangulations);
+            static void Triangulation_Monotone(const DataPoints_2& rpoints, std::vector<DataPoints_2>& triangulations_points);
     
     };
 

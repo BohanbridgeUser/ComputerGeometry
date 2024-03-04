@@ -245,16 +245,9 @@ namespace MyCG
             std::ifstream file;
             if(count == 1)
             {
-                file.open("../../res/TestPoints/Generation_Polygon.tp");
-                if(!file.is_open())
-                {
-                    outfile.open("../../res/TestPoints/Generation_Polygon.tp");
-                    if(!outfile.is_open())
-                        std::cout << "Error opening file" << std::endl;
-                }else
-                {
-                    file.close();
-                }
+                outfile.open("../../res/TestPoints/Generation_Polygon.tp");
+                if(!outfile.is_open())
+                    std::cout << "Error opening file" << std::endl;
             }
 
             typedef std::list<Point_2> Container;

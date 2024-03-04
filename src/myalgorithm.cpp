@@ -1,6 +1,7 @@
 #include "myalgorithm.h"
 #include <iostream>
 #include <vector>
+#include <deque>
 #include <stack>
 #include <queue>
 #include <set>
@@ -1070,31 +1071,30 @@ namespace MyCG
         std::cout << convexhull_intersection_points.size() << std::endl;
     }
 
-    void Triangulation::Monotone_Polygons(DataPoints_2& rpoints, std::vector<std::vector<int>>& rmonotone_polygons)
+    DataPoints_2* Triangulation::cmp_Trapezoid::p_points=nullptr;
+    bool Triangulation::cmp_Trapezoid::operator()(const Trapezoid& t1, const Trapezoid& t2) const
     {
-        /* 1.sort all points by y coordinate */
-        DataSegments_2 segments;
-        for(int i=0;i<rpoints.size()-1;++i)
-            segments.push_back(Segment_2(rpoints[i],rpoints[i+1]));
-        segments.push_back(Segment_2(rpoints[rpoints.size()-1],rpoints[0]));
-
-        std::vector<int> event_points;
-        for(int i=0;i<rpoints.size();++i)
-            event_points.push_back(i);
-        std::sort(event_points.begin(),event_points.end(), [&rpoints](int i1, int i2)->bool{
-            if(GTEQZERO(rpoints[i1].y()-rpoints[i2].y())) return true;
-            else return false;
-        });
+        /* Triangulation */
+        double x1 = 0.0, x2 = 0.0;
+        if(t1.Left.end == t1.Right.end)
+            x1 = 1.0/3.0 * ((*p_points)[t1.Left.begin].x() + (*p_points)[t1.Right.begin].x() + (*p_points)[t1.Right.end].x());
+        else
+            x1 = 0.25 * ((*p_points)[t1.Left.begin].x() + (*p_points)[t1.Right.begin].x() + (*p_points)[t1.Right.end].x() + (*p_points)[t1.Left.end].x());
         
-        /* 2.monotone polygon */
+        if(t2.Left.end == t2.Right.end)
+            x2 = 1.0/3.0 * ((*p_points)[t2.Left.begin].x() + (*p_points)[t2.Right.begin].x() + (*p_points)[t2.Right.end].x());
+        else
+            x2 = 0.25 * ((*p_points)[t2.Left.begin].x() + (*p_points)[t2.Right.begin].x() + (*p_points)[t2.Right.end].x() + (*p_points)[t2.Left.end].x());
         
+        if(LTZERO(x1-x2)) return true;
+        else return false;
     }
 
-    std::vector<std::vector<int>> Triangulation::Monotone_Polygons_Recursive(DataPoints_2& rpoints,
-                                                                             std::vector<std::vector<int>>& ipolygon)
+    std::vector<std::vector<int>> Triangulation::Monotone_Polygons(DataPoints_2& rpoints, 
+                                                                   std::vector<std::vector<int>>& ipolygon)
     {
         std::vector<std::vector<int>> monotone_polygons;
-        int flag = 0;
+        /* Top to Bottom */
         for(int i=0;i<ipolygon.size();++i)
         {
             /* 1.sort all points by y coordinate */
@@ -1106,21 +1106,11 @@ namespace MyCG
                 if(GTEQZERO(rpoints[polygon[i1]].y()-rpoints[polygon[i2]].y())) return true;
                 else return false;
             });
-
-            /* 2.monotone polygon */
-            struct Trapezoid
-            {
-                int indices[4];
-            };
-            struct Data
-            {
-                std::vector<int>        indices;
-                std::vector<int>        i_Trapes;
-            };  
-            std::unordered_map<int,Trapezoid>   trapezoids;
-            std::queue<int>                     inflect_point;
-            std::unordered_map<int,Data>        my_dict;
             
+            /* 2.monotone polygon */
+            cmp_Trapezoid::p_points = &rpoints;
+            std::map<Trapezoid, int, cmp_Trapezoid> status;
+            int flag = 0;
             for(int j=0;j<event_points.size();++j)
             {
                 int index = polygon[event_points[j]];
@@ -1129,171 +1119,355 @@ namespace MyCG
                 if(rpoints[index].y() > rpoints[index_last].y() && rpoints[index].y() > rpoints[index_next].y())
                 {
                     if(ToLeft(rpoints[index_last],rpoints[index],rpoints[index_next]))
-                    {
-                        int key = trapezoids.size();
-                        Trapezoid  T = {index_last,index,index_next,index};
-                        trapezoids.insert({key,T});
-                        my_dict[index_last].indices.push_back(index);
-                        my_dict[index_last].i_Trapes.push_back(key);
-                        my_dict[index_next].indices.push_back(index);
-                        my_dict[index_next].i_Trapes.push_back(key);
-                    }
+                        status.insert(std::pair<Trapezoid,int>(Trapezoid{index_next,index,index_last,index},index));
                     else
                     {
-                        int begin = inflect_point.front();
-                        inflect_point.pop();
-                        int end = index;
-                        std::vector<std::vector<int>> temp_polygons(2,std::vector<int>());
-                        for(int k=begin;k!=end;k=(k+1)%polygon.size())
-                            temp_polygons[0].push_back(polygon[k]);
-                        for(int k=end;k!=begin;k=(k+1)%polygon.size())
-                            temp_polygons[1].push_back(polygon[k]);
-                        std::vector<std::vector<int>> temp_monotone_polygons = Monotone_Polygons_Recursive(rpoints,temp_polygons);
-                        for(int k=0;k<temp_monotone_polygons.size();++k)
-                            monotone_polygons.push_back(temp_monotone_polygons[k]);
-                        flag = 1;
-                        continue;
+                        if(!status.empty())
+                        {
+                            auto iter_m = status.upper_bound(Trapezoid{index,index,index,index});
+                            if(iter_m == status.end())
+                                --iter_m;
+                            int begin_1 = iter_m->second;
+                            auto iter = std::find(polygon.begin(),polygon.end(),begin_1);
+                            begin_1 = iter-polygon.begin();
+                            int begin_2 = event_points[j];
+                            int end_1  = (event_points[j]==polygon.size()-1)? 0:event_points[j]+1;
+                            int end_2  = (begin_1+1)%polygon.size();
+                            std::vector<std::vector<int>> temp_polygons(2,std::vector<int>());
+                            for(int k=begin_1;k!=end_1;k=(k+1)%polygon.size())
+                                temp_polygons[0].push_back(polygon[k]);
+                            for(int k=begin_2;k!=end_2;k=(k+1)%polygon.size())
+                                temp_polygons[1].push_back(polygon[k]);
+                            std::vector<std::vector<int>> temp_monotone_polygons = Monotone_Polygons(rpoints,temp_polygons);
+                            for(int k=0;k<temp_monotone_polygons.size();++k)
+                                monotone_polygons.push_back(temp_monotone_polygons[k]);
+                            flag = 1;
+                            break;
+                        }
                     }
                 }
                 else if(rpoints[index].y() < rpoints[index_last].y() && rpoints[index].y() < rpoints[index_next].y())
                 {
-                    if(!ToLeft(rpoints[index_last],rpoints[index],rpoints[index_next]))
+                    if(ToLeft(rpoints[index_last],rpoints[index],rpoints[index_next]))
                     {
-                        inflect_point.push(index);
-                        Trapezoid* T1 = &trapezoids[my_dict[index].i_Trapes[0]];
-                        Trapezoid* T2 = &trapezoids[my_dict[index].i_Trapes[1]];
-                        int key = trapezoids.size();
-                        if(T1->indices[0] == index || T2->indices[2] == index)
-                        {
-                            trapezoids.insert(std::pair<int,Trapezoid>(key,Trapezoid{T2->indices[0],T2->indices[1],T1->indices[2],T1->indices[3]}));
-                            for(int k=0;k<my_dict[T2->indices[0]].i_Trapes.size();++k)
-                            {
-                                if(my_dict[T2->indices[0]].i_Trapes[k] == my_dict[index].i_Trapes[1])
-                                {
-                                    my_dict[T2->indices[0]].i_Trapes[k] = key;
-                                    trapezoids.erase(my_dict[index].i_Trapes[1]);
-                                    break;
-                                }
-                            }
-                            for(int k=0;k<my_dict[T1->indices[2]].i_Trapes.size();++k)
-                            {
-                                if(my_dict[T1->indices[2]].i_Trapes[k] == my_dict[index].i_Trapes[0])
-                                {
-                                    my_dict[T1->indices[2]].i_Trapes[k] = key;
-                                    trapezoids.erase(my_dict[index].i_Trapes[0]);
-                                    break;
-                                }
-                            }
-                        }
-                        else if(T1->indices[2] == index || T2->indices[0] == index)
-                        {
-                            trapezoids.insert(std::pair<int,Trapezoid>(key,Trapezoid{T1->indices[0],T1->indices[1],T2->indices[2],T2->indices[3]}));
-                            for(int k=0;k<my_dict[T1->indices[0]].i_Trapes.size();++k)
-                            {
-                                if(my_dict[T1->indices[0]].i_Trapes[k] == my_dict[index].i_Trapes[0])
-                                {
-                                    my_dict[T1->indices[0]].i_Trapes[k] = key;
-                                    trapezoids.erase(my_dict[index].i_Trapes[0]);
-                                    break;
-                                }
-                            }
-                            for(int k=0;k<my_dict[T2->indices[2]].i_Trapes.size();++k)
-                            {
-                                if(my_dict[T2->indices[2]].i_Trapes[k] == my_dict[index].i_Trapes[1])
-                                {
-                                    my_dict[T2->indices[2]].i_Trapes[k] = key;
-                                    trapezoids.erase(my_dict[index].i_Trapes[1]);
-                                    break;
-                                }
-                            }
-                        }
+                        Trapezoid T = Trapezoid{index,index_last,index,index_next};
+                        status.erase(T);
                     }
                     else
                     {
-                        trapezoids.erase(my_dict[index].i_Trapes[0]);
+                        auto iter = status.upper_bound(Trapezoid{index,index,index,index});
+                        if(iter == status.end())
+                            --iter;
+                        while(iter->first.Left.begin != index)
+                        {
+                            --iter;
+                            if(iter == status.end())
+                                iter--;
+                        }
+                        const Trapezoid& T2 = iter->first;
+                        const Trapezoid& T1 = (--iter)->first;
+                        Trapezoid T = Trapezoid{T1.Left.begin, T1.Left.end, T2.Right.begin, T2.Right.end};
+                        status.erase(T1);status.erase(T2);
+                        status.insert(std::pair<Trapezoid,int>(T,index));
                     }
                 }
                 else if(rpoints[index].y() < rpoints[index_last].y() && rpoints[index].y() > rpoints[index_next].y())
                 {
-                    if(inflect_point.empty())
+                    Trapezoid index_temp = Trapezoid{index,index,index,index};
+                    auto iter = status.upper_bound(index_temp); 
+                    const Trapezoid* pT1 = nullptr;
+                    if(iter == status.end())
+                        iter--;
+                    pT1 = &(iter->first);
+                    while(pT1->Left.begin != index)
                     {
-                        Trapezoid* T = &trapezoids[my_dict[index].i_Trapes[0]];
-                        T->indices[0] = index_next;
-                        T->indices[1] = index;
-                        my_dict[index_next].indices.push_back(index);
-                        my_dict[index_next].i_Trapes.push_back(my_dict[index].i_Trapes[0]);
+                        --iter;
+                        if(iter == status.end())
+                            iter--;
+                        pT1 = &(iter->first);
                     }
-                    else
-                    {
-                        int begin = inflect_point.front();
-                        inflect_point.pop();
-                        int end = index;
-                        std::vector<std::vector<int>> temp_polygons(2,std::vector<int>());
-                        for(int k=begin;k!=end;k=(k+1)%polygon.size())
-                            temp_polygons[0].push_back(polygon[k]);
-                        for(int k=end;k!=begin;k=(k+1)%polygon.size())
-                            temp_polygons[1].push_back(polygon[k]);
-                        std::vector<std::vector<int>> temp_monotone_polygons = Monotone_Polygons_Recursive(rpoints,temp_polygons);
-                        for(int k=0;k<temp_monotone_polygons.size();++k)
-                            monotone_polygons.push_back(temp_monotone_polygons[k]);
-                        flag = 1;
-                        continue;
-                    }
+                    const Trapezoid& rT = *pT1;
+                    Trapezoid T = Trapezoid{index_next, index, rT.Right.begin, rT.Right.end};
+                    status.erase(rT);
+                    status.insert(std::pair<Trapezoid,int>(T,index));
                 }
                 else if(rpoints[index].y() > rpoints[index_last].y() && rpoints[index].y() < rpoints[index_next].y())
                 {
-                    if(inflect_point.empty())
+                    Trapezoid index_temp = Trapezoid{index,index,index,index};
+                    auto iter = status.upper_bound(index_temp); 
+                    const Trapezoid* pT1 = nullptr;
+                    if(iter == status.end())
+                        iter--;
+                    pT1 = &(iter->first);
+                    while(pT1->Right.begin != index)
                     {
-                        Trapezoid* T = &trapezoids[my_dict[index].i_Trapes[0]];
-                        T->indices[0] = index_last;
-                        T->indices[1] = index;
-                        my_dict[index_last].indices.push_back(index);
-                        my_dict[index_last].i_Trapes.push_back(my_dict[index].i_Trapes[0]);
+                        --iter;
+                        if(iter == status.end())
+                            iter--;
+                        pT1 = &(iter->first);
+                    }
+                    const Trapezoid& rT = *pT1;
+                    Trapezoid T = Trapezoid{rT.Left.begin, rT.Left.end, index_last, index};
+                    status.erase(rT);
+                    status.insert(std::pair<Trapezoid,int>(T,index));
+                }
+            }
+            if(flag == 0)
+                monotone_polygons.push_back(polygon);
+        }
+
+        /* Bottom to Top */
+        ipolygon = monotone_polygons;
+        monotone_polygons = std::vector<std::vector<int>>();
+        for(int i=0;i<ipolygon.size();++i)
+        {
+            /* 1.sort all points by y coordinate */
+            const std::vector<int>& polygon = ipolygon[i];
+            std::vector<int> event_points;
+            for(int j=0;j<polygon.size();++j)
+                event_points.push_back(j);
+            std::sort(event_points.begin(),event_points.end(), [&rpoints,&polygon](int i1, int i2)->bool{
+                if(LTEQZERO(rpoints[polygon[i1]].y()-rpoints[polygon[i2]].y())) return true;
+                else return false;
+            });
+            
+            /* 2.monotone polygon */
+            cmp_Trapezoid::p_points = &rpoints;
+            std::map<Trapezoid, int, cmp_Trapezoid> status;
+            int flag = 0;
+            for(int j=0;j<event_points.size();++j)
+            {
+                int index = polygon[event_points[j]];
+                int index_last = (event_points[j]==0)? polygon[polygon.size()-1]:polygon[event_points[j]-1];
+                int index_next = (event_points[j]==polygon.size()-1)? polygon[0]:polygon[event_points[j]+1];
+                if(rpoints[index].y() < rpoints[index_last].y() && rpoints[index].y() < rpoints[index_next].y())
+                {
+                    if(ToLeft(rpoints[index_last],rpoints[index],rpoints[index_next]))
+                        status.insert(std::pair<Trapezoid,int>(Trapezoid{index_last,index,index_next,index},index));
+                    else
+                    {
+                        if(!status.empty())
+                        {
+                            auto iter_m = status.upper_bound(Trapezoid{index,index,index,index});
+                            if(iter_m == status.end())
+                                --iter_m;
+                            int begin_1 = iter_m->second;
+                            auto iter = std::find(polygon.begin(),polygon.end(),begin_1);
+                            begin_1 = iter-polygon.begin();
+                            int begin_2 = event_points[j];
+                            int end_1  = (event_points[j]==polygon.size()-1)? 0:event_points[j]+1;
+                            int end_2  = (begin_1+1)%polygon.size();
+                            std::vector<std::vector<int>> temp_polygons(2,std::vector<int>());
+                            for(int k=begin_1;k!=end_1;k=(k+1)%polygon.size())
+                                temp_polygons[0].push_back(polygon[k]);
+                            for(int k=begin_2;k!=end_2;k=(k+1)%polygon.size())
+                                temp_polygons[1].push_back(polygon[k]);
+                            std::vector<std::vector<int>> temp_monotone_polygons = Monotone_Polygons(rpoints,temp_polygons);
+                            for(int k=0;k<temp_monotone_polygons.size();++k)
+                                monotone_polygons.push_back(temp_monotone_polygons[k]);
+                            flag = 1;
+                            break;
+                        }
+                    }
+                }
+                else if(rpoints[index].y() > rpoints[index_last].y() && rpoints[index].y() > rpoints[index_next].y())
+                {
+                    if(ToLeft(rpoints[index_last],rpoints[index],rpoints[index_next]))
+                    {
+                        Trapezoid T = Trapezoid{index,index_next,index,index_last};
+                        status.erase(T);
                     }
                     else
                     {
-                        int begin = inflect_point.front();
-                        inflect_point.pop();
-                        int end = index;
-                        std::vector<std::vector<int>> temp_polygons(2,std::vector<int>());
-                        for(int k=begin;k!=end;k=(k+1)%polygon.size())
-                            temp_polygons[0].push_back(polygon[k]);
-                        for(int k=end;k!=begin;k=(k+1)%polygon.size())
-                            temp_polygons[1].push_back(polygon[k]);
-                        std::vector<std::vector<int>> temp_monotone_polygons = Monotone_Polygons_Recursive(rpoints,temp_polygons);
-                        for(int k=0;k<temp_monotone_polygons.size();++k)
-                            monotone_polygons.push_back(temp_monotone_polygons[k]);
-                        flag = 1;
-                        continue;
+                        auto iter = status.upper_bound(Trapezoid{index,index,index,index});
+                        if(iter == status.end())
+                            --iter;
+                        while(iter->first.Left.begin != index)
+                        {
+                            --iter;
+                            if(iter == status.end())
+                                iter--;
+                        }
+                        const Trapezoid& T2 = iter->first;
+                        const Trapezoid& T1 = (--iter)->first;
+                        Trapezoid T = Trapezoid{T1.Left.begin, T1.Left.end, T2.Right.begin, T2.Right.end};
+                        status.erase(T1);status.erase(T2);
+                        status.insert(std::pair<Trapezoid,int>(T,index));
                     }
-                }   
+                }
+                else if(rpoints[index].y() < rpoints[index_last].y() && rpoints[index].y() > rpoints[index_next].y())
+                {
+                    Trapezoid index_temp = Trapezoid{index,index,index,index};
+                    auto iter = status.upper_bound(index_temp); 
+                    const Trapezoid* pT1 = nullptr;
+                    if(iter == status.end())
+                        iter--;
+                    pT1 = &(iter->first);
+                    while(pT1->Left.begin != index)
+                    {
+                        --iter;
+                        if(iter == status.end())
+                            iter--;
+                        pT1 = &(iter->first);
+                    }
+                    const Trapezoid& rT = *pT1;
+                    Trapezoid T = Trapezoid{index_last, index, rT.Right.begin, rT.Right.end};
+                    status.erase(rT);
+                    status.insert(std::pair<Trapezoid,int>(T,index));
+                }
+                else if(rpoints[index].y() > rpoints[index_last].y() && rpoints[index].y() < rpoints[index_next].y())
+                {
+                    Trapezoid index_temp = Trapezoid{index,index,index,index};
+                    auto iter = status.upper_bound(index_temp); 
+                    const Trapezoid* pT1 = nullptr;
+                    if(iter == status.end())
+                        iter--;
+                    pT1 = &(iter->first);
+                    while(pT1->Right.begin != index)
+                    {
+                        --iter;
+                        if(iter == status.end())
+                            iter--;
+                        pT1 = &(iter->first);
+                    }   
+                    const Trapezoid& rT = *pT1;
+                    Trapezoid T = Trapezoid{rT.Left.begin, rT.Left.end, index_next, index};
+                    status.erase(rT);
+                    status.insert(std::pair<Trapezoid,int>(T,index));
+                }
             }
-        }  
-        if(flag == 1)
-            return monotone_polygons;
-        else
-            return ipolygon;
+            if(flag == 0)
+                monotone_polygons.push_back(polygon);
+        }
+        return monotone_polygons;
     }
 
-    void Triangulation::Triangulation_Monotone(const DataPoints_2& rpoints, DataPoints_2& triangulations)
+    std::vector<std::vector<int>> Triangulation::Triangulation_Polygons(const DataPoints_2& rpoints, std::vector<int>& ipolygon)
+    {
+        std::vector<int> left_chain, right_chain;
+        enum Side
+        {
+            Left = 0,
+            Right,
+            None
+        };
+        struct iPoint_with_Side
+        {
+            
+            int index;
+            Side left;
+        };
+        
+        int top = 0, bottom = 0;
+        for(int i=0;i<ipolygon.size();++i)
+        {
+            if(GTZERO(rpoints[ipolygon[i]].y() - rpoints[ipolygon[top]].y()))
+                top = i;
+            if(LTZERO(rpoints[ipolygon[i]].y() - rpoints[ipolygon[bottom]].y()))
+                bottom = i;
+        } 
+        for(int i=top;i!=bottom;i=(i+1)%ipolygon.size())
+            left_chain.push_back(ipolygon[i]);
+        for(int i=top;i!=bottom;i=(i-1+ipolygon.size()) % ipolygon.size())
+            right_chain.push_back(ipolygon[i]);
+        
+        std::deque<iPoint_with_Side> event_points;
+        for(int i=1;i<left_chain.size();++i)
+            event_points.push_back(iPoint_with_Side{left_chain[i],Left});
+        for(int i=1;i<right_chain.size();++i)
+            event_points.push_back(iPoint_with_Side{right_chain[i],Right});
+        event_points.push_front(iPoint_with_Side{ipolygon[top], None});
+        event_points.push_back(iPoint_with_Side{ipolygon[bottom], None});
+        std::sort(event_points.begin(),event_points.end(),
+                [&rpoints](const iPoint_with_Side& p1, const iPoint_with_Side& p2)->bool{
+                    if(GTEQZERO(rpoints[p1.index].y()-rpoints[p2.index].y())) return true;
+                    else return false;
+                });
+        
+        std::vector<std::vector<int>> triangulations;
+        std::deque<iPoint_with_Side> stack;
+        stack.push_front(event_points.front());
+        event_points.pop_front();
+        stack.push_front(event_points.front());
+        event_points.pop_front();
+        for(auto event:event_points)
+        {
+            iPoint_with_Side top = stack.front();
+            stack.pop_front();
+            iPoint_with_Side next = stack.front();
+            
+            if(top.left == event.left)
+            {
+                if(top.left == Left)
+                {
+                    if(!ToLeft(rpoints[next.index],rpoints[top.index],rpoints[event.index]))
+                    {
+                        stack.push_front(top);
+                        stack.push_front(event);
+                    }
+                    else
+                    {
+                        triangulations.push_back(std::vector<int>{event.index, top.index, next.index});
+                        stack.push_front(event);
+                    }
+                }
+                else
+                {
+                    if(ToLeft(rpoints[next.index], rpoints[top.index], rpoints[event.index]))
+                    {
+                        stack.push_front(top);
+                        stack.push_front(event);
+                    }
+                    else
+                    {
+                        triangulations.push_back(std::vector<int>{event.index, top.index, next.index});
+                        stack.push_front(event);
+                    }
+                }
+            }
+            else
+            {
+                iPoint_with_Side temp = top;
+                triangulations.push_back(std::vector<int>{event.index, top.index, next.index});
+                while(stack.size()>1)
+                {
+                    top = next;
+                    stack.pop_front();
+                    next = stack.front();
+                    triangulations.push_back(std::vector<int>{event.index, top.index, next.index});
+                }
+                stack.pop_front();
+                stack.push_front(temp);
+                stack.push_front(event);
+            }
+        }
+        return triangulations;
+    }
+
+    void Triangulation::Triangulation_Monotone(const DataPoints_2& rpoints, std::vector<DataPoints_2>& triangulations_points)
     {
         /* 1. monotone polygon */
         DataPoints_2 points(rpoints.begin(),rpoints.end());
         std::vector<std::vector<int>> monotone_polygons(1,std::vector<int>());
         for(int i=0;i<points.size();++i)
             monotone_polygons[0].push_back(i);
-        monotone_polygons = Monotone_Polygons_Recursive(points, monotone_polygons);
-    
-        for(int i=0;i<monotone_polygons.size();++i)
-        {
-            for(int j=0;j<monotone_polygons[i].size();++j)
-                triangulations.push_back(points[monotone_polygons[i][j]]);
-        }
-
-        // Monotone_Polygons(points, monotone_polygons);
+        monotone_polygons = Monotone_Polygons(points, monotone_polygons);
 
         /* 2. triangulation */
+        std::vector<std::vector<int>> triangulations;
+        for(int i=0;i<monotone_polygons.size();++i)
+        {
+            std::vector<std::vector<int>> temp_triangulations = Triangulation_Polygons(rpoints, monotone_polygons[i]);
+            for(int j=0;j<temp_triangulations.size();++j)
+                triangulations.push_back(temp_triangulations[j]);
+        }
 
+        /* 3. output */
+        for(int i=0;i<triangulations.size();++i)
+        {
+            triangulations_points.push_back(DataPoints_2());
+            for(int j=0;j<triangulations[i].size();++j)
+                triangulations_points[triangulations_points.size()-1].push_back(rpoints[triangulations[i][j]]);
+        }
     }
-
 }

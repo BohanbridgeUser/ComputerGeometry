@@ -348,16 +348,24 @@
     // Triangulation
     void glViewer::monotone_triangulation()
     {
+        for(int i=11;i<13;i++)
+            m_gl_display->setdisplaymode(i);
         m_gl_display->setdisplaymode(13);
         DataPoints_2& points_2 = m_model->Get_Generation_Polygon_Points();
         DataPoints_2& triangulations = m_model->Get_Triangulations();
-        MyCG::Triangulation::Triangulation_Monotone(points_2, triangulations);
+        std::vector<DataPoints_2> triangulations_points;
+        MyCG::Triangulation::Triangulation_Monotone(points_2, triangulations_points);
         DataSegments_2 triangulation_lines;
-        for(int i=0;i<triangulations.size();i+=2)
+        for(int i=0;i<triangulations_points.size();++i)
         {
-            Segment_2 segment(triangulations[i], triangulations[i+1]);
-            triangulation_lines.push_back(segment);
-        }
+            for(int j=0;j<triangulations_points[i].size()-1;++j)
+            {
+                Segment_2 segment(triangulations_points[i][j], triangulations_points[i][j+1]);
+                triangulation_lines.push_back(segment);
+            }
+            triangulation_lines.push_back(Segment_2(triangulations_points[i][triangulations_points[i].size()-1], triangulations_points[i][0]));
+        } 
+        
         segments_data_to_display(triangulation_lines, m_gl_display->Get_pos_triangulation_monotone_lines());
         m_model->flip_empty();
         adjustCamera();

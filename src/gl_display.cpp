@@ -31,7 +31,7 @@
 /// @{
     void Gl_Display::setdisplaymode(int mode)
     {
-        m_mode[mode] = true;
+        m_mode[mode] = !m_mode[mode];
     }
 
     void Gl_Display::clean()
@@ -230,7 +230,7 @@
         rendering_programs[SEGMENT_SHADER].bind();
         rendering_programs[SEGMENT_SHADER].setUniformValue(triangulation_monotone_segment_color_location, options.triangulation_monotone_segment_color);
         gl->glLineWidth(options.Triangulation_Monotone_Segment_Size);
-        gl->glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(pos_generation_polygon_lines.size() / 3));
+        gl->glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(pos_triangulation_monotone_lines.size() / 3));
         rendering_programs[SEGMENT_SHADER].release();
     }
 
