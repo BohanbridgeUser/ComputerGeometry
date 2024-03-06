@@ -348,25 +348,149 @@
     // Triangulation
     void glViewer::monotone_triangulation()
     {
-        for(int i=11;i<13;i++)
+        for(int i=11;i<15;i++)
             m_gl_display->setdisplaymode(i);
-        m_gl_display->setdisplaymode(13);
         DataPoints_2& points_2 = m_model->Get_Generation_Polygon_Points();
         DataPoints_2& triangulations = m_model->Get_Triangulations();
         std::vector<DataPoints_2> triangulations_points;
         MyCG::Triangulation::Triangulation_Monotone(points_2, triangulations_points);
         DataSegments_2 triangulation_lines;
+        DataPoints_2 triangulation_polygons;
         for(int i=0;i<triangulations_points.size();++i)
         {
             for(int j=0;j<triangulations_points[i].size()-1;++j)
             {
                 Segment_2 segment(triangulations_points[i][j], triangulations_points[i][j+1]);
                 triangulation_lines.push_back(segment);
+                triangulation_polygons.push_back(triangulations_points[i][j]);
             }
             triangulation_lines.push_back(Segment_2(triangulations_points[i][triangulations_points[i].size()-1], triangulations_points[i][0]));
+            triangulation_polygons.push_back(triangulations_points[i][triangulations_points[i].size()-1]);
         } 
-        
+
+        triangulations_data_to_display(triangulation_polygons, m_gl_display->Get_pos_triangulation_polygon());
         segments_data_to_display(triangulation_lines, m_gl_display->Get_pos_triangulation_monotone_lines());
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    // Voronoi
+    void glViewer::voronoi_naive()
+    {
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        HDS hds;
+        MyCG::Voronoi::Voronoi_Naive(points_2, hds);
+        DataPoints_2 voronoi_sites(points_2), voronoi_vertices;
+        DataSegments_2 voronoi_edges;
+        auto vertex_handle = hds.vertices_begin();
+        do
+        {
+            voronoi_vertices.push_back(Point_2(vertex_handle->point().x(), vertex_handle->point().y()));
+            vertex_handle++;
+        } while (vertex_handle != hds.vertices_begin());
+        
+        auto edge_handle = hds.halfedges_begin();
+        do
+        {
+            voronoi_edges.push_back(Segment_2(edge_handle->vertex()->point(), edge_handle->opposite()->vertex()->point()));
+            edge_handle++;
+        } while (edge_handle != hds.halfedges_begin());
+        
+        points_data_to_display(voronoi_sites, m_gl_display->Get_pos_voronoi_sites());
+        points_data_to_display(voronoi_vertices, m_gl_display->Get_pos_voronoi_vertices());
+        segments_data_to_display(voronoi_edges, m_gl_display->Get_pos_voronoi_edges());
+
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::voronoi_incremental()
+    {
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        HDS hds;
+        MyCG::Voronoi::Voronoi_Incremental(points_2, hds);
+        DataPoints_2 voronoi_sites(points_2), voronoi_vertices;
+        DataSegments_2 voronoi_edges;
+        auto vertex_handle = hds.vertices_begin();
+        do
+        {
+            voronoi_vertices.push_back(Point_2(vertex_handle->point().x(), vertex_handle->point().y()));
+            vertex_handle++;
+        } while (vertex_handle != hds.vertices_begin());
+        
+        auto edge_handle = hds.halfedges_begin();
+        do
+        {
+            voronoi_edges.push_back(Segment_2(edge_handle->vertex()->point(), edge_handle->opposite()->vertex()->point()));
+            edge_handle++;
+        } while (edge_handle != hds.halfedges_begin());
+        
+        points_data_to_display(voronoi_sites, m_gl_display->Get_pos_voronoi_sites());
+        points_data_to_display(voronoi_vertices, m_gl_display->Get_pos_voronoi_vertices());
+        segments_data_to_display(voronoi_edges, m_gl_display->Get_pos_voronoi_edges());
+        
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::voronoi_divide_and_conquer()
+    {
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        HDS hds;
+        MyCG::Voronoi::Voronoi_Divide_and_Conquer(points_2, hds);
+        DataPoints_2 voronoi_sites(points_2), voronoi_vertices;
+        DataSegments_2 voronoi_edges;
+        auto vertex_handle = hds.vertices_begin();
+        do
+        {
+            voronoi_vertices.push_back(Point_2(vertex_handle->point().x(), vertex_handle->point().y()));
+            vertex_handle++;
+        } while (vertex_handle != hds.vertices_begin());
+        
+        auto edge_handle = hds.halfedges_begin();
+        do
+        {
+            voronoi_edges.push_back(Segment_2(edge_handle->vertex()->point(), edge_handle->opposite()->vertex()->point()));
+            edge_handle++;
+        } while (edge_handle != hds.halfedges_begin());
+        
+        points_data_to_display(voronoi_sites, m_gl_display->Get_pos_voronoi_sites());
+        points_data_to_display(voronoi_vertices, m_gl_display->Get_pos_voronoi_vertices());
+        segments_data_to_display(voronoi_edges, m_gl_display->Get_pos_voronoi_edges());
+        
+        m_model->flip_empty();
+        adjustCamera();
+        m_gl_display->check_buffer();
+    }
+
+    void glViewer::voronoi_sweep_line()
+    {
+        DataPoints_2& points_2 = m_model->Get_DataPoints_2();
+        HDS hds;
+        MyCG::Voronoi::Voronoi_Sweep_Line(points_2, hds);
+        DataPoints_2 voronoi_sites(points_2), voronoi_vertices;
+        DataSegments_2 voronoi_edges;
+        auto vertex_handle = hds.vertices_begin();
+        do
+        {
+            voronoi_vertices.push_back(Point_2(vertex_handle->point().x(), vertex_handle->point().y()));
+            vertex_handle++;
+        } while (vertex_handle != hds.vertices_begin());
+        
+        auto edge_handle = hds.halfedges_begin();
+        do
+        {
+            voronoi_edges.push_back(Segment_2(edge_handle->vertex()->point(), edge_handle->opposite()->vertex()->point()));
+            edge_handle++;
+        } while (edge_handle != hds.halfedges_begin());
+        
+        points_data_to_display(voronoi_sites, m_gl_display->Get_pos_voronoi_sites());
+        points_data_to_display(voronoi_vertices, m_gl_display->Get_pos_voronoi_vertices());
+        segments_data_to_display(voronoi_edges, m_gl_display->Get_pos_voronoi_edges());
+        
         m_model->flip_empty();
         adjustCamera();
         m_gl_display->check_buffer();
@@ -458,6 +582,16 @@
         }
     }
 
+    void glViewer::triangulations_data_to_display(DataPoints_2 const& rpoints, DataF& dis_points)
+    {
+        dis_points.resize(3*rpoints.size());
+        for(int i=0;i<rpoints.size();++i)
+        { 
+            dis_points[3*i]   = rpoints[i].x();
+            dis_points[3*i+1] = rpoints[i].y();
+            dis_points[3*i+2] = 0.0;
+        }
+    }
 /// @}
 
 /// @name Private Access

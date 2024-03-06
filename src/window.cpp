@@ -264,10 +264,37 @@
         update();
     }
 
+    // Triangulation
     void MainWindow::on_actionMonotone_triggered()
     {
         m_glviewer->monotone_triangulation();
         update();
     }
+
+    // Voronoi
+    void MainWindow::on_actionNaive_3_triggered()
+    {
+        m_glviewer->voronoi_naive();
+        update();
+    }
+
+    void MainWindow::on_actionIncremental_triggered()
+    {
+        m_glviewer->voronoi_incremental();
+        update();
+    }
+
+    void MainWindow::on_actionDivide_and_Conquer_2_triggered()
+    {
+        m_glviewer->voronoi_divide_and_conquer();
+        update();
+    }
+
+    void MainWindow::on_actionSweep_Line_2()
+    {
+        m_glviewer->voronoi_sweep_line();
+        update();
+    }
+    
 /// @}
 

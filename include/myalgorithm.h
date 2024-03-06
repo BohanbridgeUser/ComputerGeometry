@@ -219,6 +219,15 @@ namespace MyCG
     
     };
 
+    class Voronoi
+    {
+        public:
+            static void Voronoi_Naive(const DataPoints_2& rpoints, HDS& rhds);
+            static void Voronoi_Incremental(const DataPoints_2& rpoints, HDS& rhds);
+            static void Voronoi_Divide_and_Conquer(const DataPoints_2& rpoints, HDS& rhds);
+            static void Voronoi_Sweep_Line(const DataPoints_2& rpoints, HDS& rhds);
+    };
+
 }
 
 

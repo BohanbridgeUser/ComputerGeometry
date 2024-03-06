@@ -18,6 +18,9 @@
 #include <CGAL/bounding_box.h>
 #include <CGAL/Polygon_2.h>
 
+#include <CGAL/HalfedgeDS_default.h>
+#include <CGAL/HalfedgeDS_min_items.h>
+
 #include <CGAL/function_objects.h>
 #include <CGAL/Join_input_iterator.h>
 #include <CGAL/point_generators_2.h>
@@ -63,6 +66,8 @@ namespace MyCG
                                                                     Bbox_2;
     typedef CGAL::Combination_enumerator<int>            
                                                                     Combination;
+    typedef CGAL::HalfedgeDS_default<Kernel> 
+                                                                    HDS;
 
     /* OpenGL */
     typedef std::vector<float> 

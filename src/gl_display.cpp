@@ -49,6 +49,10 @@
         pos_generation_polygon_lines.clear();
         pos_generation_polygon_points.clear();
         pos_triangulation_monotone_lines.clear();
+        pos_triangulation_polygon.clear();
+        pos_voronoi_sites.clear();
+        pos_voronoi_vertices.clear();
+        pos_voronoi_edges.clear();
         gl_buffer_init = false;
         for(int i=0;i<SIZE_OF_MODE;++i)
             m_mode[i] = false;
@@ -166,6 +170,7 @@
         rendering_programs[VERTEX_SHADER].setUniformValue(generation_convexhull_points_color_location, options.generation_convexhull_point_color);
         gl->glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(pos_generation_convexhull_points.size() / 3));
         rendering_programs[VERTEX_SHADER].release();
+        vao[GENERATION_CONVEXHULL_POINTS_VAO].release();
     }
 
     void Gl_Display::render_generation_convexhull_lines()
@@ -177,6 +182,7 @@
         gl->glLineWidth(options.Generation_ConvexHull_Line_Size);
         gl->glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(pos_generation_convexhull_lines.size() / 3));
         rendering_programs[SEGMENT_SHADER].release();
+        vao[GENERATION_CONVEXHULL_LINES_VAO].release();
     }
 
     void Gl_Display::render_intersection_convexhull()
@@ -188,6 +194,7 @@
         gl->glLineWidth(options.Intersection_ConvexHull_Size);
         gl->glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(pos_intersection_convexhull.size() / 3));
         rendering_programs[SEGMENT_SHADER].release();
+        vao[INTERSECTION_CONVEXHULL_VAO].release();
     }
 
     void Gl_Display::render_intersection_convexhull_points()
@@ -199,6 +206,7 @@
         rendering_programs[VERTEX_SHADER].setUniformValue(intersection_convexhull_points_color_location, options.intersection_convexhull_point_color);
         gl->glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(pos_intersection_convexhull_points.size() / 3));
         rendering_programs[VERTEX_SHADER].release();
+        vao[INTERSECTION_CONVEXHULL_POINTS_VAO].release();
     }
 
     void Gl_Display::render_generation_polygon_points()
@@ -210,6 +218,7 @@
         rendering_programs[VERTEX_SHADER].setUniformValue(generation_polygon_points_color_location, options.generation_polygon_point_color);
         gl->glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(pos_generation_polygon_points.size() / 3));
         rendering_programs[VERTEX_SHADER].release();
+        vao[GENERATION_POLYGON_POINTS_VAO].release();
     }
 
     void Gl_Display::render_generation_polygon_segments()
@@ -221,6 +230,7 @@
         gl->glLineWidth(options.Generation_Polygon_Segment_Size);
         gl->glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(pos_generation_polygon_lines.size() / 3));
         rendering_programs[SEGMENT_SHADER].release();
+        vao[GENERATION_POLYGON_LINES_VAO].release();
     }
 
     void Gl_Display::render_triangulation_monotone_segments()
@@ -232,6 +242,54 @@
         gl->glLineWidth(options.Triangulation_Monotone_Segment_Size);
         gl->glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(pos_triangulation_monotone_lines.size() / 3));
         rendering_programs[SEGMENT_SHADER].release();
+        vao[TRIANGULATION_MONOTONE_LINES_VAO].release();
+    }
+
+    void Gl_Display::render_triangulation_polygon()
+    {
+        gl->glEnable(GL_BLEND);
+        vao[POLYGON_TRIANGULATION_VAO].bind();
+        rendering_programs[TRIANGULATION_SHADER].bind();
+        rendering_programs[TRIANGULATION_SHADER].setUniformValue(triangulation_monotone_polygon_color_location, options.polygon_triangulation_color);
+        gl->glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(pos_triangulation_polygon.size() / 3));
+        rendering_programs[TRIANGULATION_SHADER].release();
+        vao[POLYGON_TRIANGULATION_VAO].release();
+    }
+
+    void Gl_Display::render_voronoi_sites()
+    {
+        gl->glEnable(GL_POINT_SMOOTH);
+        vao[VORONOI_SITES_VAO].bind();
+        rendering_programs[VERTEX_SHADER].bind();
+        rendering_programs[VERTEX_SHADER].setUniformValue(voronoi_sites_size_location, options.Voronoi_Sites_Size);
+        rendering_programs[VERTEX_SHADER].setUniformValue(voronoi_sites_color_location, options.voronoi_sites_color);
+        gl->glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(pos_voronoi_sites.size() / 3));
+        rendering_programs[VERTEX_SHADER].release();
+        vao[VORONOI_SITES_VAO].release();
+    }
+
+    void Gl_Display::render_voronoi_vertices()
+    {
+        gl->glEnable(GL_POINT_SMOOTH);
+        vao[VORONOI_VERTICES_VAO].bind();
+        rendering_programs[VERTEX_SHADER].bind();
+        rendering_programs[VERTEX_SHADER].setUniformValue(voronoi_vertices_size_location, options.Voronoi_Vertices_Size);
+        rendering_programs[VERTEX_SHADER].setUniformValue(voronoi_vertices_color_location, options.voronoi_vertices_color);
+        gl->glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(pos_voronoi_vertices.size() / 3));
+        rendering_programs[VERTEX_SHADER].release();
+        vao[VORONOI_VERTICES_VAO].release();
+    }
+
+    void Gl_Display::render_voronoi_edges()
+    {
+        gl->glEnable(GL_LINE_SMOOTH);
+        vao[VORONOI_EDGES_VAO].bind();
+        rendering_programs[SEGMENT_SHADER].bind();
+        rendering_programs[SEGMENT_SHADER].setUniformValue(voronoi_edges_color_location, options.voronoi_edges_color);
+        gl->glLineWidth(options.Voronoi_Edges_Size);
+        gl->glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(pos_voronoi_edges.size() / 3));
+        rendering_programs[SEGMENT_SHADER].release();
+        vao[VORONOI_EDGES_VAO].release();
     }
 
     void Gl_Display::initializeGL()
@@ -283,6 +341,22 @@
             std::cerr << "Error while linking segments program" << std::endl;
         rendering_programs[SEGMENT_SHADER].bind();
 
+        /* triangulations shader */
+        QOpenGLShader *triangulation_vs = new QOpenGLShader(QOpenGLShader::Vertex);
+        if(!triangulation_vs->compileSourceFile("../../shader/triangulation.vs"))
+            std::cerr << "Error while compiling triangulation vertex shader" << std::endl;
+        QOpenGLShader *triangulation_fs = new QOpenGLShader(QOpenGLShader::Fragment);
+        if(!triangulation_fs->compileSourceFile("../../shader/triangulation.fs"))
+            std::cerr << "Error while compiling triangulation fragment shader" << std::endl;
+        
+        if(!rendering_programs[TRIANGULATION_SHADER].addShader(triangulation_vs))
+            std::cerr << "Error while adding triangulation vertex shader" << std::endl;
+        if(!rendering_programs[TRIANGULATION_SHADER].addShader(triangulation_fs))
+            std::cerr << "Error while adding triangulation fragment shader" << std::endl;
+        if(!rendering_programs[TRIANGULATION_SHADER].link())
+            std::cerr << "Error while linking triangulation program" << std::endl;
+        rendering_programs[TRIANGULATION_SHADER].bind();
+
         render_functions.emplace_back(std::bind(&Gl_Display::render_points,this));
         render_functions.emplace_back(std::bind(&Gl_Display::render_segments,this));
         render_functions.emplace_back(std::bind(&Gl_Display::render_generation_segments,this));
@@ -297,6 +371,11 @@
         render_functions.emplace_back(std::bind(&Gl_Display::render_generation_polygon_points,this));
         render_functions.emplace_back(std::bind(&Gl_Display::render_generation_polygon_segments,this));
         render_functions.emplace_back(std::bind(&Gl_Display::render_triangulation_monotone_segments,this));
+        render_functions.emplace_back(std::bind(&Gl_Display::render_triangulation_polygon, this));
+        render_functions.emplace_back(std::bind(&Gl_Display::render_voronoi_sites,this));
+        render_functions.emplace_back(std::bind(&Gl_Display::render_voronoi_vertices,this));
+        render_functions.emplace_back(std::bind(&Gl_Display::render_voronoi_edges,this));
+
     }
 
     void Gl_Display::check_buffer()
@@ -354,6 +433,14 @@
                               vbo[GENERATION_POLYGON_LINES_LOCATION], pos_generation_polygon_lines, "vertex");
             init_buffer(rendering_programs[SEGMENT_SHADER],vao[TRIANGULATION_MONOTONE_LINES_VAO],
                               vbo[TRIANGULATION_MONOTONE_LINES_LOCATION], pos_triangulation_monotone_lines, "vertex");
+            init_buffer(rendering_programs[TRIANGULATION_SHADER],vao[POLYGON_TRIANGULATION_VAO],
+                              vbo[POLYGON_TRIANGULATION_LOCATION], pos_triangulation_polygon, "vertex");
+            init_buffer(rendering_programs[VERTEX_SHADER],vao[VORONOI_SITES_VAO],
+                              vbo[VORONOI_SITES_LOCATION], pos_voronoi_sites, "pos_vertex");
+            init_buffer(rendering_programs[VERTEX_SHADER],vao[VORONOI_VERTICES_VAO],
+                              vbo[VORONOI_VERTICES_LOCATION], pos_voronoi_vertices, "pos_vertex");
+            init_buffer(rendering_programs[SEGMENT_SHADER],vao[VORONOI_EDGES_VAO],
+                              vbo[VORONOI_EDGES_LOCATION], pos_voronoi_edges, "vertex");
         }
         gl_buffer_init = true;
     }
@@ -393,6 +480,10 @@
         attrib_buffer_vertex(generation_polygon_points_size_location, generation_polygon_points_color_location, generation_polygon_points_mvplocation, mvp_matrix);
         attrib_buffer_segment(generation_polygon_lines_color_location, generation_polygon_lines_mvplocation, mvp_matrix);
         attrib_buffer_segment(triangulation_monotone_segment_color_location, triangulation_monotone_segment_mvplocation, mvp_matrix);
+        attrib_buffer_triangulation(triangulation_monotone_polygon_color_location, triangulation_monotone_polygon_mvplocation, mvp_matrix);
+        attrib_buffer_vertex(voronoi_sites_size_location, voronoi_sites_color_location, voronoi_sites_mvplocation, mvp_matrix);
+        attrib_buffer_vertex(voronoi_vertices_size_location, voronoi_vertices_color_location, voronoi_vertices_mvplocation, mvp_matrix);
+        attrib_buffer_segment(voronoi_edges_color_location, voronoi_edges_mvplocation, mvp_matrix);
     }
 
 /// @}
@@ -448,6 +539,14 @@
         scl = rendering_programs[SEGMENT_SHADER].uniformLocation("color");
         rendering_programs[SEGMENT_SHADER].setUniformValue(mvpl, mvp_matrix);
         rendering_programs[SEGMENT_SHADER].release();
+    }
+    void Gl_Display::attrib_buffer_triangulation(int& pcl, int& mvpl, QMatrix4x4& mvp_matrix)
+    {
+        rendering_programs[TRIANGULATION_SHADER].bind();
+        mvpl = rendering_programs[TRIANGULATION_SHADER].uniformLocation("mvp_matrix");
+        pcl = rendering_programs[TRIANGULATION_SHADER].uniformLocation("color");
+        rendering_programs[TRIANGULATION_SHADER].setUniformValue(mvpl, mvp_matrix);
+        rendering_programs[TRIANGULATION_SHADER].release();
     }
 /// @}
 /// @name Private Operations

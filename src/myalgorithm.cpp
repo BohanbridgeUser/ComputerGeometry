@@ -1470,4 +1470,32 @@ namespace MyCG
                 triangulations_points[triangulations_points.size()-1].push_back(rpoints[triangulations[i][j]]);
         }
     }
+
+    void Voronoi::Voronoi_Naive(const DataPoints_2& rpoints, HDS& rhds)
+    {
+        const DataPoints_2& sites = rpoints;
+        const Point_2* p_p1 = &sites[0];
+        const Point_2* p_p2 = &sites[1];
+        for(int i=1;i<sites.size();++i)
+        {
+            
+        }
+
+    }
+
+    void Voronoi::Voronoi_Incremental(const DataPoints_2& rpoints, HDS& rhds)
+    {
+
+    }
+
+    void Voronoi::Voronoi_Divide_and_Conquer(const DataPoints_2& rpoints, HDS& rhds)
+    {
+
+    }
+
+    void Voronoi::Voronoi_Sweep_Line(const DataPoints_2& rpoints, HDS& rhds)
+    {
+
+    }
+
 }

@@ -54,7 +54,7 @@
      <x>0</x>
      <y>0</y>
      <width>1498</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -111,9 +111,19 @@
      </property>
      <addaction name="actionMonotone"/>
     </widget>
+    <widget class="QMenu" name="menuVoronoi_2">
+     <property name="title">
+      <string>Voronoi</string>
+     </property>
+     <addaction name="actionNaive_3"/>
+     <addaction name="actionIncremental"/>
+     <addaction name="actionDivide_and_Conquer_2"/>
+     <addaction name="actionSweep_Line_2"/>
+    </widget>
     <addaction name="menuConvexHull"/>
     <addaction name="menuIntersection"/>
     <addaction name="menuTriangulation"/>
+    <addaction name="menuVoronoi_2"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -316,6 +326,46 @@
   <action name="actionMonotone">
    <property name="text">
     <string>Monotone</string>
+   </property>
+  </action>
+  <action name="actionNaive">
+   <property name="text">
+    <string>Naive</string>
+   </property>
+  </action>
+  <action name="actionNaive_2">
+   <property name="text">
+    <string>Naive</string>
+   </property>
+  </action>
+  <action name="actionDivide_and_Conquer">
+   <property name="text">
+    <string>Divide and Conquer</string>
+   </property>
+  </action>
+  <action name="actionSweep_Line">
+   <property name="text">
+    <string>Sweep Line</string>
+   </property>
+  </action>
+  <action name="actionNaive_3">
+   <property name="text">
+    <string>Naive</string>
+   </property>
+  </action>
+  <action name="actionIncremental">
+   <property name="text">
+    <string>Incremental</string>
+   </property>
+  </action>
+  <action name="actionDivide_and_Conquer_2">
+   <property name="text">
+    <string>Divide and Conquer</string>
+   </property>
+  </action>
+  <action name="actionSweep_Line_2">
+   <property name="text">
+    <string>Sweep Line</string>
    </property>
   </action>
  </widget>

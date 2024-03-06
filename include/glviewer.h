@@ -27,6 +27,7 @@ class glViewer : public CGAL::QGLViewer
             typedef MyCG::Polyhedron        Polyhedron;
             typedef MyCG::Segment_2         Segment_2;
             typedef MyCG::Segment_3         Segment_3;
+            typedef MyCG::HDS               HDS;
 
             typedef MyCG::DataF             DataF;
             typedef MyCG::DataI             DataI;
@@ -77,6 +78,12 @@ class glViewer : public CGAL::QGLViewer
 
             // Triangulation
             void monotone_triangulation();
+
+            // Voronoi
+            void voronoi_naive();
+            void voronoi_incremental();
+            void voronoi_divide_and_conquer();
+            void voronoi_sweep_line();
 
             void clean();
         /// @}
@@ -138,6 +145,7 @@ class glViewer : public CGAL::QGLViewer
             void initializeGL();
             void points_data_to_display(DataPoints_2 const& rpoints, DataF& dis_points);
             void segments_data_to_display(DataSegments_2 const& rsegments, DataF& loc_segments_vertex);
+            void triangulations_data_to_display(DataPoints_2 const& rpoints, DataF& dis_points);
         /// @}
         /// @name Private Access
         /// @{

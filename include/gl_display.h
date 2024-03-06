@@ -57,6 +57,17 @@ struct Draw_Options
 
     float Triangulation_Monotone_Segment_Size = 2.0f;
     QColor triangulation_monotone_segment_color = QColor(255.f, 0.f, 0.f);
+
+    QColor polygon_triangulation_color = QColor(0.f, 255.f, 255.f);
+
+    float Voronoi_Sites_Size = 5.5f;
+    QColor voronoi_sites_color = QColor(255.f, 0.f, 0.f);
+
+    float Voronoi_Vertices_Size = 5.5f;
+    QColor voronoi_vertices_color = QColor(0.f, 255.f, 0.f);
+
+    float Voronoi_Edges_Size = 2.0f;
+    QColor voronoi_edges_color = QColor(0.f, 255.f, 255.f);
 };
 
 class Gl_Display
@@ -92,6 +103,10 @@ class Gl_Display
                 INTERSECTION_CONVEXHULL_LINES,
                 GENERATION_POLYGON_POINTS,
                 GENERATION_POLYGON_LINES,
+                POLYGON_TRIANGULATION,
+                VORONOI_SITES,
+                VORONOI_VERTICES,
+                VORONOI_EDGES,
                 MESH,
                 SIZE_OF_MODE
             };
@@ -137,6 +152,11 @@ class Gl_Display
             void render_generation_polygon_points();
             void render_generation_polygon_segments();
             void render_triangulation_monotone_segments();
+            void render_triangulation_polygon();
+            void render_voronoi_sites();
+            void render_voronoi_vertices();
+            void render_voronoi_edges();
+
         /// @}
         /// @name Access
         /// @{
@@ -153,7 +173,11 @@ class Gl_Display
             DataF& Get_pos_generation_polygon_points() { return pos_generation_polygon_points; }
             DataF& Get_pos_generation_polygon_lines() { return pos_generation_polygon_lines; }
             DataF& Get_pos_triangulation_monotone_lines() { return pos_triangulation_monotone_lines; }
-            
+            DataF& Get_pos_triangulation_polygon() { return pos_triangulation_polygon; }
+            DataF& Get_pos_voronoi_sites() { return pos_voronoi_sites; }
+            DataF& Get_pos_voronoi_vertices() { return pos_voronoi_vertices; }
+            DataF& Get_pos_voronoi_edges() { return pos_voronoi_edges; }
+
         /// @}
         /// @name Inquiry
         /// @{
@@ -224,6 +248,16 @@ class Gl_Display
             int                           generation_polygon_lines_mvplocation;
             int                           triangulation_monotone_segment_color_location;
             int                           triangulation_monotone_segment_mvplocation;
+            int                           triangulation_monotone_polygon_color_location;
+            int                           triangulation_monotone_polygon_mvplocation;
+            int                           voronoi_sites_size_location;
+            int                           voronoi_sites_color_location;
+            int                           voronoi_sites_mvplocation;
+            int                           voronoi_vertices_size_location;
+            int                           voronoi_vertices_color_location;
+            int                           voronoi_vertices_mvplocation;
+            int                           voronoi_edges_color_location;
+            int                           voronoi_edges_mvplocation;
 
             /* data */
             DataF                         pos_points;
@@ -239,6 +273,10 @@ class Gl_Display
             DataF                         pos_generation_polygon_points;
             DataF                         pos_generation_polygon_lines;
             DataF                         pos_triangulation_monotone_lines;
+            DataF                         pos_triangulation_polygon;
+            DataF                         pos_voronoi_sites;
+            DataF                         pos_voronoi_vertices;
+            DataF                         pos_voronoi_edges;
             /* OpenGL Buffers */
             enum VBO{
                 POINTS_LOCATION = 0,
@@ -254,6 +292,10 @@ class Gl_Display
                 GENERATION_POLYGON_POINTS_LOCATION,
                 GENERATION_POLYGON_LINES_LOCATION,
                 TRIANGULATION_MONOTONE_LINES_LOCATION,
+                POLYGON_TRIANGULATION_LOCATION,
+                VORONOI_SITES_LOCATION,
+                VORONOI_VERTICES_LOCATION,
+                VORONOI_EDGES_LOCATION,
                 SIZE_OF_VBO
             };
             enum VAO{
@@ -270,11 +312,16 @@ class Gl_Display
                 GENERATION_POLYGON_POINTS_VAO,
                 GENERATION_POLYGON_LINES_VAO,
                 TRIANGULATION_MONOTONE_LINES_VAO,
+                POLYGON_TRIANGULATION_VAO,
+                VORONOI_SITES_VAO,
+                VORONOI_VERTICES_VAO,
+                VORONOI_EDGES_VAO,
                 SIZE_OF_VAO
             };
             enum SHADER{
                 VERTEX_SHADER = 0,
                 SEGMENT_SHADER,
+                TRIANGULATION_SHADER,
                 SIZE_OF_SHADER
             };
 
@@ -288,6 +335,7 @@ class Gl_Display
         /// @{
             void attrib_buffer_vertex(int& psl, int& pcl, int& mvpl, QMatrix4x4& mvp_matrix);
             void attrib_buffer_segment(int& scl, int& mvpl, QMatrix4x4& mvp_matrix);
+            void attrib_buffer_triangulation(int& tcl, int& mvpl, QMatrix4x4& mvp_matrix);
         /// @}
         /// @name Private Operations
         /// @{

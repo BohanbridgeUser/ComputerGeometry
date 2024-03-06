@@ -52,6 +52,12 @@ protected:
 
         //Triangulation
         void on_actionMonotone_triggered();
+
+        // Voronoi
+        void on_actionNaive_3_triggered();
+        void on_actionIncremental_triggered();
+        void on_actionDivide_and_Conquer_2_triggered();
+        void on_actionSweep_Line_2();
 };
 
 
