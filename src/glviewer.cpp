@@ -274,7 +274,7 @@
     {
         m_gl_display->setdisplaymode(1);
         DataPoints_2& points_2 = m_model->Get_DataPoints_2();
-        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_Graham_Scan_Index(points_2);
+        DataSegments_2 convexsegments = MyCG::ConvexHull_2::ConvexHull_2_Graham_Scan(points_2);
         segments_data_to_display(convexsegments, m_gl_display->Get_pos_segments());
         m_model->flip_empty();
         adjustCamera();

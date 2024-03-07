@@ -1498,18 +1498,19 @@ namespace MyCG
 
     const DataPoints_2* Sort_Vertex_by_Angle_Index::p_points = nullptr;
 
-    int find_rightest_index(const DataPoints_2& rpoints, std::vector<int> indices)
+    int find_rightest_index(const DataPoints_2& rpoints, std::vector<int> indices, int index)
     {
         int rightest = -1;
-        for(int i=1;i<indices.size();++i)
+        for(int i=0;i<indices.size();++i)
         {
-            if(rightest == -1 || !ToLeft(rpoints[0],rpoints[indices[rightest]],rpoints[indices[i]]))
+            if(i == index) continue;
+            if(rightest == -1 || !ToLeft(rpoints[indices[index]],rpoints[indices[rightest]],rpoints[indices[i]]))
                 rightest = i;
         }
         return rightest;
     }
 
-    DataSegments_2 ConvexHull_2::ConvexHull_Graham_Scan_Index(const DataPoints_2& rpoints)
+    std::vector<int> ConvexHull_2::ConvexHull_Graham_Scan_Index(const DataPoints_2& rpoints)
     {
         // 1. Preparation work
         std::vector<int> ipoints;
@@ -1518,17 +1519,19 @@ namespace MyCG
         Sort_Vertex_by_Angle_Index::SetP0(rpoints);
         std::cout << Sort_Vertex_by_Angle_Index::GetP0() << std::endl;
         std::sort(ipoints.begin(),ipoints.end(),Sort_Vertex_by_Angle_Index());
+        
         std::cout << ipoints[0] << std::endl;
         std::cout << rpoints[ipoints[0]] << std::endl;
+
         std::stack<int> convexhull_points, temp_stack;
         convexhull_points.push(ipoints[0]);
-        int rightest = find_rightest_index(rpoints, ipoints);
+        int rightest = find_rightest_index(rpoints, ipoints, 0);
         std::cout << ipoints[rightest] << std::endl;
         std::cout << rpoints[ipoints[rightest]] << std::endl;
         convexhull_points.push(ipoints[rightest]);
         for(int i=ipoints.size()-1;i>0;--i)
         {
-            if(ipoints[i]==rightest) continue;
+            if(i==rightest) continue;
             temp_stack.push(ipoints[i]);
         }
 
@@ -1556,20 +1559,13 @@ namespace MyCG
         }
 
         // 3. Output
-        DataSegments_2 convexhull_segments;
-        int last = convexhull_points.top();
-        while(convexhull_points.size()>1)
+        std::vector<int> output;
+        while(!convexhull_points.empty())
         {
-            int ip1 =  convexhull_points.top();
-            Point_2 tp1 = rpoints[ip1];
+            output.push_back(convexhull_points.top());
             convexhull_points.pop();
-            int ip2 = convexhull_points.top();
-            Point_2 tp2 = rpoints[ip2];
-            convexhull_segments.push_back(Segment_2(tp1,tp2));
         }
-        int temp_index = convexhull_points.top();
-        convexhull_segments.push_back(Segment_2(rpoints[temp_index],rpoints[last]));
-        return convexhull_segments;
+        return output;
     }
 
     Polyhedron Voronoi::trivalVD(const DataPoints_2& rpoints, int begin, int end, Polyhedron& rpolyhedron)

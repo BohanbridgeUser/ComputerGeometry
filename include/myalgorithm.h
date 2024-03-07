@@ -45,7 +45,7 @@ namespace MyCG
 
     int find_rightest(const DataPoints_2& rpoints, int index);
 
-    int find_rightest_index(const DataPoints_2& rpoints, std::vector<int> indices);
+    int find_rightest_index(const DataPoints_2& rpoints, std::vector<int> indices, int index);
 
     int DAC(const DataPoints_2& rpoints, std::vector<int>& convexhull_points, int begin, int end);
 
@@ -94,7 +94,7 @@ namespace MyCG
             static DataSegments_2 ConvexHull_2_Jarvis_March(const DataPoints_2& points);
             static DataSegments_2 ConvexHull_2_Graham_Scan(const DataPoints_2& points);
             static DataSegments_2 ConvexHull_2_Divide_and_Conquer(const DataPoints_2& points);
-            static DataSegments_2 ConvexHull_Graham_Scan_Index(const DataPoints_2& rpoints);
+            static std::vector<int> ConvexHull_Graham_Scan_Index(const DataPoints_2& rpoints);
     };
 
     class Intersection_2
