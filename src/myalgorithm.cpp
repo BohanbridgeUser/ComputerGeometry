@@ -1471,29 +1471,181 @@ namespace MyCG
         }
     }
 
-    void Voronoi::Voronoi_Naive(const DataPoints_2& rpoints, HDS& rhds)
+    bool Sort_Vertex_by_Angle_Index::operator()(const int i1, const int i2)
     {
-        const DataPoints_2& sites = rpoints;
-        const Point_2* p_p1 = &sites[0];
-        const Point_2* p_p2 = &sites[1];
-        for(int i=1;i<sites.size();++i)
+        if(i1 == i0)
+            return true;
+        if(i2 == i0)
+            return false;
+        if(ToLeft((*p_points)[i0],(*p_points)[i1],(*p_points)[i2]))
+            return true;
+        return false;
+    }
+
+    void Sort_Vertex_by_Angle_Index::SetP0(const DataPoints_2& rpoints)
+    {
+        p_points = &rpoints;
+        for(int i=0;i<p_points->size();++i)
         {
-            
+            if((*p_points)[i].x() < (*p_points)[i0].x())
+                i0 = i;
+            else if((*p_points)[i].x() == (*p_points)[i0].x() && (*p_points)[i].y() < (*p_points)[i0].y())
+                i0 = i;
+        }
+    }
+
+    int Sort_Vertex_by_Angle_Index::i0 = 0;
+
+    const DataPoints_2* Sort_Vertex_by_Angle_Index::p_points = nullptr;
+
+    DataSegments_2 ConvexHull_2::ConvexHull_Graham_Scan_Index(const DataPoints_2& rpoints)
+    {
+        // 1. Preparation work
+        std::vector<int> ipoints;
+        for(int i=0;i<rpoints.size();++i)
+            ipoints.push_back(i);
+        Sort_Vertex_by_Angle_Index::SetP0(rpoints);
+        std::cout << Sort_Vertex_by_Angle_Index::GetP0() << std::endl;
+        std::sort(ipoints.begin(),ipoints.end(),Sort_Vertex_by_Angle_Index());
+        std::cout << ipoints[0] << std::endl;
+        std::cout << rpoints[ipoints[0]] << std::endl;
+        std::stack<int> convexhull_points, temp_stack;
+        convexhull_points.push(ipoints[0]);
+        int rightest = find_rightest(rpoints,0);
+        std::cout << rightest << std::endl;
+        std::cout << rpoints[rightest] << std::endl;
+        convexhull_points.push(rightest);
+        for(int i=ipoints.size()-1;i>0;--i)
+        {
+            if(ipoints[i]==rightest) continue;
+            temp_stack.push(ipoints[i]);
         }
 
+        // 2. Construct convex hull
+        while(!temp_stack.empty())
+        {
+            int i1 = convexhull_points.top();
+            const Point_2* c1 = &rpoints[convexhull_points.top()];
+            convexhull_points.pop();
+            const Point_2 *c2 = &rpoints[convexhull_points.top()];
+            convexhull_points.push(i1);
+            int i2 = temp_stack.top();
+            const Point_2* t1 = &rpoints[temp_stack.top()];
+            while(!ToLeft(*c2,*c1,*t1))
+            {
+                convexhull_points.pop();
+                c1 = &rpoints[convexhull_points.top()];
+                int index_temp = convexhull_points.top();
+                convexhull_points.pop();
+                c2 = &rpoints[convexhull_points.top()];
+                convexhull_points.push(index_temp);
+            }
+            convexhull_points.push(i2);
+            temp_stack.pop();
+        }
+
+        // 3. Output
+        DataSegments_2 convexhull_segments;
+        int last = convexhull_points.top();
+        while(convexhull_points.size()>1)
+        {
+            int ip1 =  convexhull_points.top();
+            Point_2 tp1 = rpoints[ip1];
+            convexhull_points.pop();
+            int ip2 = convexhull_points.top();
+            Point_2 tp2 = rpoints[ip2];
+            convexhull_segments.push_back(Segment_2(tp1,tp2));
+        }
+        int temp_index = convexhull_points.top();
+        convexhull_segments.push_back(Segment_2(rpoints[temp_index],rpoints[last]));
+        return convexhull_segments;
     }
 
-    void Voronoi::Voronoi_Incremental(const DataPoints_2& rpoints, HDS& rhds)
+    Polyhedron Voronoi::trivalVD(const DataPoints_2& rpoints, int begin, int end, Polyhedron& rpolyhedron)
     {
+        typedef typename Polyhedron::Halfedge_handle 
+                                                            Halfedge_handle;
+        typedef typename Polyhedron::Vertex_handle 
+                                                            Vertex_handle;
 
+        if(end - begin < 1)
+            return rpolyhedron;
+        else
+        {
+            Point_2 p1(rpoints[begin].x(), rpoints[begin].y());
+            Point_2 p2(rpoints[end].x(), rpoints[end].y());
+            Point_2 mid_point((p1.x()+p2.x())/2.0, (p1.y()+p2.y())/2.0);
+            Line_2 line(p1,p2);
+            Line_2 perpendicular_line = line.perpendicular(mid_point);
+            std::vector<Halfedge_handle> halfedge_handles;
+            for(auto edge_handle = rpolyhedron.edges_begin();edge_handle!=rpolyhedron.edges_end();++edge_handle)
+            {
+                if(edge_handle->is_border())
+                    continue;
+
+                Point_2 p1(edge_handle->vertex()->point().x(), edge_handle->vertex()->point().y());
+                Point_2 p2(edge_handle->opposite()->vertex()->point().x(), edge_handle->opposite()->vertex()->point().y());
+                Segment_2 edge_segment(p1,p2);
+                const auto intersection = CGAL::intersection(edge_segment,perpendicular_line);
+                if(intersection)
+                {
+                    if(const Point_2* p = boost::get<Point_2>(&*intersection))
+                    {
+                        Halfedge_handle halfedge_handle = rpolyhedron.split_edge(edge_handle);
+                        halfedge_handle->vertex()->point() = Point_3(p->x(),p->y(),0.0);
+                        halfedge_handles.push_back(halfedge_handle);
+                    }
+                }
+            }
+            rpolyhedron.split_facet(halfedge_handles[0],halfedge_handles[1]);
+            return rpolyhedron;
+        }     
     }
 
-    void Voronoi::Voronoi_Divide_and_Conquer(const DataPoints_2& rpoints, HDS& rhds)
+    Polyhedron Voronoi::MergeVD(const Polyhedron& rpolyhedron_left, const Polyhedron& rpolyhedron_right)
     {
-
+        Polyhedron polyhedron;
+        return polyhedron;
     }
 
-    void Voronoi::Voronoi_Sweep_Line(const DataPoints_2& rpoints, HDS& rhds)
+    Polyhedron Voronoi::dacVD(const DataPoints_2& rpoints, int begin, int end, Polyhedron& rpolyhedron)
+    {
+        int mid = (begin + end) / 2;
+        if(end - begin < 3)
+            return trivalVD(rpoints, begin, end, rpolyhedron);
+        return MergeVD(dacVD(rpoints, begin, mid, rpolyhedron), dacVD(rpoints, mid+1, end, rpolyhedron));
+    }
+
+    void Voronoi::Voronoi_Divide_and_Conquer(const DataPoints_2& rpoints, Polyhedron& polyhedron)
+    {
+        DataPoints_2 points(rpoints);
+        std::sort(points.begin(),points.end(),[](const Point_2& p1, const Point_2& p2)->bool{
+            if(LTZERO(p1.x()-p2.x())) return true;
+            else return false;
+        });
+
+        typedef typename Polyhedron::HalfedgeDS HDS;
+        typedef CGAL::Polyhedron_incremental_builder_3<HDS> Polyhedron_Builder;
+        /* all zone for voronoi */
+        Polyhedron_Builder Builder(polyhedron.hds(), true);
+        Builder.begin_surface(4, 1);
+        Builder.add_vertex(Point_3(-2.5, -2.5, 0.0));
+        Builder.add_vertex(Point_3(-2.5,  2.5, 0.0));
+        Builder.add_vertex(Point_3( 2.5,  2.5, 0.0));
+        Builder.add_vertex(Point_3( 2.5, -2.5, 0.0));
+        Builder.begin_facet();
+        Builder.add_vertex_to_facet(0);
+        Builder.add_vertex_to_facet(1);
+        Builder.add_vertex_to_facet(2);
+        Builder.add_vertex_to_facet(3);
+        Builder.end_facet();
+        Builder.end_surface();
+    
+        int mid = (points.size()-1) / 2;
+        polyhedron = MergeVD(dacVD(points, 0, mid, polyhedron), dacVD(points, mid+1, points.size()-1, polyhedron));
+    }
+
+    void Voronoi::Voronoi_Sweep_Line(const DataPoints_2& rpoints, Polyhedron& polyhedron)
     {
 
     }

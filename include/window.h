@@ -7,7 +7,7 @@
 /* My headers */
 #include "gl_display.h"
 #include "glviewer.h"
-#include "ui_CGUI.h"
+#include "ui_MyUI.h"
 
 class MainWindow : public QMainWindow, public Ui_MainWindow
 {
@@ -54,10 +54,10 @@ protected:
         void on_actionMonotone_triggered();
 
         // Voronoi
-        void on_actionNaive_3_triggered();
-        void on_actionIncremental_triggered();
+        // void on_actionNaive_3_triggered();
+        // void on_actionIncremental_triggered();
         void on_actionDivide_and_Conquer_2_triggered();
-        void on_actionSweep_Line_2();
+        void on_actionSweep_Line_2_triggered();
 };
 
 

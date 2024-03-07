@@ -80,8 +80,8 @@ class glViewer : public CGAL::QGLViewer
             void monotone_triangulation();
 
             // Voronoi
-            void voronoi_naive();
-            void voronoi_incremental();
+            // void voronoi_naive();
+            // void voronoi_incremental();
             void voronoi_divide_and_conquer();
             void voronoi_sweep_line();
 

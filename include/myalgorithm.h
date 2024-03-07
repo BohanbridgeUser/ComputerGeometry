@@ -59,6 +59,19 @@ namespace MyCG
             static Point_2 p0;
     };
 
+    class Sort_Vertex_by_Angle_Index
+    {
+        public:
+            Sort_Vertex_by_Angle_Index(){};
+            bool operator()(const int i1, const int i2);
+
+            static void SetP0(const DataPoints_2& rpoints);
+            static int GetP0(){ return i0; }
+        private:
+            static int i0;
+            static const DataPoints_2* p_points;
+    };
+
     class Sort_Vertex_by_XY
     {
         public:
@@ -79,6 +92,7 @@ namespace MyCG
             static DataSegments_2 ConvexHull_2_Jarvis_March(const DataPoints_2& points);
             static DataSegments_2 ConvexHull_2_Graham_Scan(const DataPoints_2& points);
             static DataSegments_2 ConvexHull_2_Divide_and_Conquer(const DataPoints_2& points);
+            static DataSegments_2 ConvexHull_Graham_Scan_Index(const DataPoints_2& rpoints);
     };
 
     class Intersection_2
@@ -221,11 +235,15 @@ namespace MyCG
 
     class Voronoi
     {
+        private:
+            static Polyhedron trivalVD(const DataPoints_2& rpoints, int begin, int end, Polyhedron& rpolyhedron);
+            static Polyhedron MergeVD(const Polyhedron& rpolyhedron_left, const Polyhedron& rpolyhedron_right);
+            static Polyhedron dacVD(const DataPoints_2& rpoints, int begin, int end, Polyhedron& rpolyhedron);
         public:
-            static void Voronoi_Naive(const DataPoints_2& rpoints, HDS& rhds);
-            static void Voronoi_Incremental(const DataPoints_2& rpoints, HDS& rhds);
-            static void Voronoi_Divide_and_Conquer(const DataPoints_2& rpoints, HDS& rhds);
-            static void Voronoi_Sweep_Line(const DataPoints_2& rpoints, HDS& rhds);
+            // static void Voronoi_Naive(const DataPoints_2& rpoints, HDS& rhds);
+            // static void Voronoi_Incremental(const DataPoints_2& rpoints, HDS& rhds);
+            static void Voronoi_Divide_and_Conquer(const DataPoints_2& rpoints, Polyhedron& rhds);
+            static void Voronoi_Sweep_Line(const DataPoints_2& rpoints, Polyhedron& rhds);
     };
 
 }

@@ -115,8 +115,6 @@
      <property name="title">
       <string>Voronoi</string>
      </property>
-     <addaction name="actionNaive_3"/>
-     <addaction name="actionIncremental"/>
      <addaction name="actionDivide_and_Conquer_2"/>
      <addaction name="actionSweep_Line_2"/>
     </widget>

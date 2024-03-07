@@ -20,6 +20,9 @@
 
 #include <CGAL/HalfedgeDS_default.h>
 #include <CGAL/HalfedgeDS_min_items.h>
+#include <CGAL/HalfedgeDS_items_2.h>
+#include <CGAL/HalfedgeDS_decorator.h>
+#include <CGAL/Polyhedron_incremental_builder_3.h>
 
 #include <CGAL/function_objects.h>
 #include <CGAL/Join_input_iterator.h>
@@ -66,8 +69,10 @@ namespace MyCG
                                                                     Bbox_2;
     typedef CGAL::Combination_enumerator<int>            
                                                                     Combination;
-    typedef CGAL::HalfedgeDS_default<Kernel> 
+    typedef CGAL::HalfedgeDS_default<Kernel, CGAL::HalfedgeDS_items_3> 
                                                                     HDS;
+    typedef CGAL::HalfedgeDS_decorator<HDS>
+                                                                    HDS_decorator;
 
     /* OpenGL */
     typedef std::vector<float> 
