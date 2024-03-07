@@ -1498,6 +1498,17 @@ namespace MyCG
 
     const DataPoints_2* Sort_Vertex_by_Angle_Index::p_points = nullptr;
 
+    int find_rightest_index(const DataPoints_2& rpoints, std::vector<int> indices)
+    {
+        int rightest = -1;
+        for(int i=1;i<indices.size();++i)
+        {
+            if(rightest == -1 || !ToLeft(rpoints[0],rpoints[indices[rightest]],rpoints[indices[i]]))
+                rightest = i;
+        }
+        return rightest;
+    }
+
     DataSegments_2 ConvexHull_2::ConvexHull_Graham_Scan_Index(const DataPoints_2& rpoints)
     {
         // 1. Preparation work
@@ -1511,10 +1522,10 @@ namespace MyCG
         std::cout << rpoints[ipoints[0]] << std::endl;
         std::stack<int> convexhull_points, temp_stack;
         convexhull_points.push(ipoints[0]);
-        int rightest = find_rightest(rpoints,0);
-        std::cout << rightest << std::endl;
-        std::cout << rpoints[rightest] << std::endl;
-        convexhull_points.push(rightest);
+        int rightest = find_rightest_index(rpoints, ipoints);
+        std::cout << ipoints[rightest] << std::endl;
+        std::cout << rpoints[ipoints[rightest]] << std::endl;
+        convexhull_points.push(ipoints[rightest]);
         for(int i=ipoints.size()-1;i>0;--i)
         {
             if(ipoints[i]==rightest) continue;
