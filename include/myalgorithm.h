@@ -238,14 +238,17 @@ namespace MyCG
     class Voronoi
     {
         private:
-            static Polyhedron trivalVD(const DataPoints_2& rpoints, int begin, int end, Polyhedron& rpolyhedron);
-            static Polyhedron MergeVD(const Polyhedron& rpolyhedron_left, const Polyhedron& rpolyhedron_right);
-            static Polyhedron dacVD(const DataPoints_2& rpoints, int begin, int end, Polyhedron& rpolyhedron);
+            static bool Is_In_Polygon(const DataPoints_2& rpoints, int index,
+                                      const Arrangement_2& rarrangement, const Arrangement_2::Face_handle& rface);
+            static Arrangement_2 trivalVD(const DataPoints_2& rpoints, int begin, int end, const Arrangement_2& rarrangement);
+            static Arrangement_2 MergeVD(const DataPoints_2& rpoints, Arrangement_2& rarrangement_left, int begin_l, int end_l,
+                                                                      Arrangement_2& rarrangement_right, int begin_r, int end_r);
+            static Arrangement_2 dacVD(const DataPoints_2& rpoints, int begin, int end, Arrangement_2& arrengment);
         public:
             // static void Voronoi_Naive(const DataPoints_2& rpoints, HDS& rhds);
             // static void Voronoi_Incremental(const DataPoints_2& rpoints, HDS& rhds);
-            static void Voronoi_Divide_and_Conquer(const DataPoints_2& rpoints, Polyhedron& rhds);
-            static void Voronoi_Sweep_Line(const DataPoints_2& rpoints, Polyhedron& rhds);
+            static void Voronoi_Divide_and_Conquer(DataPoints_2& rpoints, Arrangement_2& rarrangement);
+            static void Voronoi_Sweep_Line(const DataPoints_2& rpoints, Arrangement_2& rarrangement);
     };
 
 }

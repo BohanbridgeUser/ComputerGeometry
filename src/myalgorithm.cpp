@@ -66,6 +66,10 @@ namespace MyCG
         return (p1p2l == p2p3l && p2p3l == p3p1l) || (p1p2r == p2p3r && p2p3r == p3p1r);
     }
 
+    /************************************************************************************************/
+    /************************************************************************************************/
+    /***************************************** Convexhull *******************************************/
+
     bool sort_vertex_by_xy(const Point_2& pp1, const Point_2& pp2)
     {
         if(GTEQZERO(pp1.x() - pp2.x()))
@@ -481,6 +485,10 @@ namespace MyCG
         convexhull_lines.push_back(Segment_2(points[convexhull_points[end]],points[convexhull_points[0]]));
         return convexhull_lines;
     }
+
+    /************************************************************************************************/
+    /************************************************************************************************/
+    /***************************************** Intersection *****************************************/
 
     bool Intersection_2::CMP_Point_LR_X::operator()(const Point_LR& p1, const Point_LR& p2)
     {
@@ -1071,6 +1079,9 @@ namespace MyCG
         std::cout << convexhull_intersection_points.size() << std::endl;
     }
 
+    /************************************************************************************************/
+    /************************************************************************************************/
+    /***************************************** Triangulation *****************************************/
     DataPoints_2* Triangulation::cmp_Trapezoid::p_points=nullptr;
     bool Triangulation::cmp_Trapezoid::operator()(const Trapezoid& t1, const Trapezoid& t2) const
     {
@@ -1471,6 +1482,10 @@ namespace MyCG
         }
     }
 
+    /************************************************************************************************/
+    /************************************************************************************************/
+    /******************************************** Voronoi *******************************************/
+
     bool Sort_Vertex_by_Angle_Index::operator()(const int i1, const int i2)
     {
         if(i1 == i0)
@@ -1512,22 +1527,21 @@ namespace MyCG
 
     std::vector<int> ConvexHull_2::ConvexHull_Graham_Scan_Index(const DataPoints_2& rpoints)
     {
+        // 0. preprocess
+        if(rpoints.size() == 2)
+            return std::vector<int>{0,1};
+        if(rpoints.size() == 1)
+            return std::vector<int>{0};
+
         // 1. Preparation work
         std::vector<int> ipoints;
         for(int i=0;i<rpoints.size();++i)
             ipoints.push_back(i);
         Sort_Vertex_by_Angle_Index::SetP0(rpoints);
-        std::cout << Sort_Vertex_by_Angle_Index::GetP0() << std::endl;
         std::sort(ipoints.begin(),ipoints.end(),Sort_Vertex_by_Angle_Index());
-        
-        std::cout << ipoints[0] << std::endl;
-        std::cout << rpoints[ipoints[0]] << std::endl;
-
         std::stack<int> convexhull_points, temp_stack;
         convexhull_points.push(ipoints[0]);
         int rightest = find_rightest_index(rpoints, ipoints, 0);
-        std::cout << ipoints[rightest] << std::endl;
-        std::cout << rpoints[ipoints[rightest]] << std::endl;
         convexhull_points.push(ipoints[rightest]);
         for(int i=ipoints.size()-1;i>0;--i)
         {
@@ -1568,91 +1582,325 @@ namespace MyCG
         return output;
     }
 
-    Polyhedron Voronoi::trivalVD(const DataPoints_2& rpoints, int begin, int end, Polyhedron& rpolyhedron)
+    bool Voronoi::Is_In_Polygon(const DataPoints_2& rpoints, int index,
+                                const Arrangement_2& rarrangement, const Face_handle& rface)
     {
-        typedef typename Polyhedron::Halfedge_handle 
-                                                            Halfedge_handle;
-        typedef typename Polyhedron::Vertex_handle 
-                                                            Vertex_handle;
+        auto halfedge_circulator = rface->inner_ccbs_begin();
+        int last = -1;
+        do{
+            auto halfedge_handle = halfedge_circulator.current_iterator();
+            Point_2 point1((**halfedge_circulator).curve().source().x(), (**halfedge_circulator).curve().source().y()),
+                    point2((**halfedge_circulator).curve().target().x(), (**halfedge_circulator).curve().target().y());
+            if(ToLeft(rpoints[index], point1, point2))
+            {
+                if(last == -1)
+                    last = 1;
+                else if(last == 0)
+                    return false;
+            }
+            else
+            {
+                if(last == -1)
+                    last = 0;
+                else if(last == 1)
+                    return false;
+            }
+            halfedge_circulator++;
+        }while(halfedge_circulator != rface->inner_ccbs_begin());
+    }
 
+    Arrangement_2 Voronoi::trivalVD(const DataPoints_2& rpoints, int begin, int end, 
+                                    const Arrangement_2& rarrangement)
+    {
+        Arrangement_2 arrangement(rarrangement);
         if(end - begin < 1)
-            return rpolyhedron;
+            return arrangement;
         else
         {
-            Point_2 p1(rpoints[begin].x(), rpoints[begin].y());
-            Point_2 p2(rpoints[end].x(), rpoints[end].y());
-            Point_2 mid_point((p1.x()+p2.x())/2.0, (p1.y()+p2.y())/2.0);
-            Line_2 line(p1,p2);
-            Line_2 perpendicular_line = line.perpendicular(mid_point);
-            std::vector<Halfedge_handle> halfedge_handles;
-            for(auto edge_handle = rpolyhedron.edges_begin();edge_handle!=rpolyhedron.edges_end();++edge_handle)
-            {
-                if(edge_handle->is_border())
-                    continue;
-
-                Point_2 p1(edge_handle->vertex()->point().x(), edge_handle->vertex()->point().y());
-                Point_2 p2(edge_handle->opposite()->vertex()->point().x(), edge_handle->opposite()->vertex()->point().y());
-                Segment_2 edge_segment(p1,p2);
-                const auto intersection = CGAL::intersection(edge_segment,perpendicular_line);
-                if(intersection)
-                {
-                    if(const Point_2* p = boost::get<Point_2>(&*intersection))
-                    {
-                        Halfedge_handle halfedge_handle = rpolyhedron.split_edge(edge_handle);
-                        halfedge_handle->vertex()->point() = Point_3(p->x(),p->y(),0.0);
-                        halfedge_handles.push_back(halfedge_handle);
-                    }
-                }
-            }
-            rpolyhedron.split_facet(halfedge_handles[0],halfedge_handles[1]);
-            return rpolyhedron;
+            T_Point_2 p1(rpoints[begin].x(), rpoints[begin].y());
+            T_Point_2 p2(rpoints[end].x(), rpoints[end].y());
+            T_Point_2 mid_point((p1.x()+p2.x())/2.0, (p1.y()+p2.y())/2.0);
+            T_Line_2 line(p1,p2);
+            T_Line_2 perpendicular_line = line.perpendicular(mid_point);
+            CGAL::insert(arrangement, perpendicular_line);
+            return arrangement;
         }     
     }
 
-    Polyhedron Voronoi::MergeVD(const Polyhedron& rpolyhedron_left, const Polyhedron& rpolyhedron_right)
+    Arrangement_2 Voronoi::MergeVD(const DataPoints_2& rpoints, Arrangement_2& rarrangement_left, int begin_l, int end_l,
+                                                                Arrangement_2& rarrangement_right, int begin_r, int end_r)
     {
-        Polyhedron polyhedron;
-        return polyhedron;
+        Arrangement_2 arrangement_left(rarrangement_left), arrangement_right(rarrangement_right);
+        DataPoints_2 sites_left, sites_right;
+        for(int i=begin_l;i<=end_l;++i)
+            sites_left.push_back(rpoints[i]);
+        for(int i=begin_r;i<=end_r;++i)
+            sites_right.push_back(rpoints[i]);
+
+        /* 1. Construct convexhull of sites */
+        std::vector<int> convexhull_left = ConvexHull_2::ConvexHull_Graham_Scan_Index(sites_left);
+        std::vector<int> convexhull_right = ConvexHull_2::ConvexHull_Graham_Scan_Index(sites_right);
+        for(int i=0;i<convexhull_left.size();++i)
+            convexhull_left[i] += begin_l;
+        for(int i=0;i<convexhull_right.size();++i)
+            convexhull_right[i] += begin_r;
+        
+
+        /* 2. find top tangent */
+        auto func_find_tangent_top = [begin_l, end_l, begin_r, end_r](const DataPoints_2&rpoints, 
+                                    const std::vector<int>&convexhull_left, 
+                                    const std::vector<int>&convexhull_right)->std::pair<int,int>{
+            int left_rightest = 0, right_leftest = 0;
+            for(int i=0;i<convexhull_left.size();++i)
+            {
+                if(rpoints[convexhull_left[i]].x() > rpoints[convexhull_left[left_rightest]].x())
+                    left_rightest = i;
+                else if(rpoints[convexhull_left[i]].x() == rpoints[convexhull_left[left_rightest]].x() && 
+                        rpoints[convexhull_left[i]].y() > rpoints[convexhull_left[left_rightest]].y())
+                    left_rightest = i;
+            }
+            for(int i=0;i<convexhull_right.size();++i)
+            {
+                if(rpoints[convexhull_right[i]].x() < rpoints[convexhull_right[right_leftest]].x())
+                    right_leftest = i;
+                else if(rpoints[convexhull_right[i]].x() == rpoints[convexhull_right[right_leftest]].x() && 
+                        rpoints[convexhull_right[i]].y() < rpoints[convexhull_right[right_leftest]].y())
+                    right_leftest = i;
+            }
+
+            if(end_l - begin_l < 1 && end_r - begin_r < 1)
+            {
+                return std::pair<int,int>{0,0};
+            }
+            else if(end_l - begin_l < 1 && end_r - begin_r >= 1)
+            {
+                int r_last = (right_leftest+1)%convexhull_right.size(), 
+                    r_next = (right_leftest-1+convexhull_right.size())%convexhull_right.size();
+                int l_r = left_rightest, 
+                    r_l = right_leftest;
+                int l_t = -1, r_t = -1;
+                while(ToLeft(rpoints[convexhull_left[l_r]], rpoints[convexhull_right[r_l]], rpoints[convexhull_right[r_next]]) != false ||
+                      ToLeft(rpoints[convexhull_left[l_r]], rpoints[convexhull_right[r_l] ], rpoints[convexhull_right[r_last] ]) != false)
+                {
+                    r_l = r_next;
+                    r_next = (r_l-1+convexhull_right.size())%convexhull_right.size();
+                    r_last = (r_l+1)%convexhull_right.size();
+                }
+                if(ToLeft(rpoints[convexhull_left[l_r]],rpoints[convexhull_right[r_l]],rpoints[convexhull_right[r_next]])==false && 
+                   ToLeft(rpoints[convexhull_left[l_r]],rpoints[convexhull_right[r_l]],rpoints[convexhull_right[r_last]])==false)
+                {
+                    l_t = l_r;
+                    r_t = r_l;
+                }
+                return std::pair<int,int>{l_t,r_t};
+            }
+            else if(end_l - begin_l >= 1 && end_r - begin_r < 1)
+            {
+                int l_next = (left_rightest+1)%convexhull_left.size(),  
+                    l_last = (left_rightest-1+convexhull_left.size())%convexhull_left.size();
+                int l_r = left_rightest, r_l = right_leftest;
+                int l_t = -1, r_t = -1;
+                while(ToLeft(rpoints[convexhull_right[r_l]], rpoints[convexhull_left[l_r]], rpoints[convexhull_left[l_next]]) != true ||
+                      ToLeft(rpoints[convexhull_right[r_l]], rpoints[convexhull_left[l_r] ], rpoints[convexhull_left[l_last] ]) != true)
+                {
+                    l_r = l_next;
+                    l_next = (l_r+1)%convexhull_left.size();
+                    l_last = (l_r-1+convexhull_left.size())%convexhull_left.size();
+                }
+                if(ToLeft(rpoints[convexhull_right[r_l]],rpoints[convexhull_left[l_r]],rpoints[convexhull_left[l_next]])==true &&
+                   ToLeft(rpoints[convexhull_right[r_l]],rpoints[convexhull_left[l_r]],rpoints[convexhull_left[l_last]])==true)
+                {
+                    l_t = l_r;
+                    r_t = r_l;
+                }
+                return std::pair<int,int>{l_t,r_t};
+            }
+            else 
+            {   
+                int r_last = (right_leftest+1)%convexhull_right.size(), r_next = (right_leftest-1+convexhull_right.size())%convexhull_right.size();
+                int l_next = (left_rightest+1)%convexhull_left.size(),  l_last = (left_rightest-1+convexhull_left.size())%convexhull_left.size();
+                int l_r = left_rightest, r_l = right_leftest;
+                int l_t = -1, r_t = -1;
+                while(l_t == -1 || r_t == -1)
+                {
+                    while(ToLeft(rpoints[convexhull_left[l_r]], rpoints[convexhull_right[r_l]], rpoints[convexhull_right[r_next]]) != false ||
+                          ToLeft(rpoints[convexhull_left[l_r]], rpoints[convexhull_right[r_l] ], rpoints[convexhull_right[r_last] ]) != false)
+                    {
+                        r_l = r_next;
+                        r_next = (r_l-1+convexhull_right.size())%convexhull_right.size();
+                        r_last = (r_l+1)%convexhull_right.size();
+                    }
+                    while(ToLeft(rpoints[convexhull_right[r_l]], rpoints[convexhull_left[l_r]], rpoints[convexhull_left[l_next]]) != true ||
+                          ToLeft(rpoints[convexhull_right[r_l]], rpoints[convexhull_left[l_r] ], rpoints[convexhull_left[l_last] ]) != true)
+                    {
+                        l_r = l_next;
+                        l_next = (l_r+1)%convexhull_left.size();
+                        l_last = (l_r-1+convexhull_left.size())%convexhull_left.size();
+                    }
+                    if(ToLeft(rpoints[convexhull_left[l_r]],rpoints[convexhull_right[r_l]],rpoints[convexhull_right[r_next]])==false && 
+                       ToLeft(rpoints[convexhull_left[l_r]],rpoints[convexhull_right[r_l]],rpoints[convexhull_right[r_last]])==false &&
+                       ToLeft(rpoints[convexhull_right[r_l]],rpoints[convexhull_left[l_r]],rpoints[convexhull_left[l_next]])==true &&
+                       ToLeft(rpoints[convexhull_right[r_l]],rpoints[convexhull_left[l_r]],rpoints[convexhull_left[l_last]])==true)
+                    {
+                        l_t = l_r;
+                        r_t = r_l;
+                    }
+                
+                }  
+                return std::pair<int,int>{l_t,r_t};
+            }
+            
+        };
+        auto func_find_tangent_bottom = [begin_l, end_l, begin_r, end_r](const DataPoints_2&rpoints, 
+                                        const std::vector<int>&convexhull_left, 
+                                        const std::vector<int>&convexhull_right)->std::pair<int,int>
+        {
+            int left_rightest = 0, right_leftest = 0;
+            for(int i=0;i<convexhull_left.size();++i)
+            {
+                if(rpoints[convexhull_left[i]].x() > rpoints[convexhull_left[left_rightest]].x())
+                    left_rightest = i;
+                else if(rpoints[convexhull_left[i]].x() == rpoints[convexhull_left[left_rightest]].x() && 
+                        rpoints[convexhull_left[i]].y() > rpoints[convexhull_left[left_rightest]].y())
+                    left_rightest = i;
+            }
+            for(int i=0;i<convexhull_right.size();++i)
+            {
+                if(rpoints[convexhull_right[i]].x() < rpoints[convexhull_right[right_leftest]].x())
+                    right_leftest = i;
+                else if(rpoints[convexhull_right[i]].x() == rpoints[convexhull_right[right_leftest]].x() && 
+                        rpoints[convexhull_right[i]].y() < rpoints[convexhull_right[right_leftest]].y())
+                    right_leftest = i;
+            }
+
+            if(end_l - begin_l < 1 && end_r - begin_r < 1)
+            {
+                return std::pair<int,int>{0,0};
+            }
+            else if(end_l - begin_l < 1 && end_r - begin_r >= 1)
+            {
+                int r_last = (right_leftest-1+convexhull_right.size())%convexhull_right.size(), 
+                    r_next = (right_leftest+1)%convexhull_right.size();
+                int l_r = left_rightest, 
+                    r_l = right_leftest;
+                int l_b = -1, r_b = -1;
+                while(ToLeft(rpoints[convexhull_left[l_r]], rpoints[convexhull_right[r_l]], rpoints[convexhull_right[r_next]]) != true ||
+                      ToLeft(rpoints[convexhull_left[l_r]], rpoints[convexhull_right[r_l] ], rpoints[convexhull_right[r_last] ]) != true)
+                {
+                    r_l = r_next;
+                    r_next = (right_leftest+1)%convexhull_right.size();
+                    r_last = (right_leftest-1+convexhull_right.size())%convexhull_right.size(); 
+                }
+                if(ToLeft(rpoints[convexhull_left[l_r]],rpoints[convexhull_right[r_l]],rpoints[convexhull_right[r_next]])==true && 
+                   ToLeft(rpoints[convexhull_left[l_r]],rpoints[convexhull_right[r_l]],rpoints[convexhull_right[r_last]])==true)
+                {
+                    l_b = l_r;
+                    r_b = r_l;
+                }
+                return std::pair<int,int>{l_b,r_b};
+            }
+            else if(end_l - begin_l >= 1 && end_r - begin_r < 1)
+            {
+                int l_next = (left_rightest-1+convexhull_left.size())%convexhull_left.size(),  
+                    l_last = (left_rightest+1)%convexhull_left.size();
+                int l_r = left_rightest, r_l = right_leftest;
+                int l_b = -1, r_b = -1;
+                while(ToLeft(rpoints[convexhull_right[r_l]], rpoints[convexhull_left[l_r]], rpoints[convexhull_left[l_next]]) != false ||
+                      ToLeft(rpoints[convexhull_right[r_l]], rpoints[convexhull_left[l_r] ], rpoints[convexhull_left[l_last] ]) != false)
+                {
+                    l_r = l_next;
+                    l_next = (left_rightest-1+convexhull_left.size())%convexhull_left.size();
+                    l_last = (left_rightest+1)%convexhull_left.size();
+                }
+                if(ToLeft(rpoints[convexhull_right[r_l]],rpoints[convexhull_left[l_r]],rpoints[convexhull_left[l_next]])==false &&
+                   ToLeft(rpoints[convexhull_right[r_l]],rpoints[convexhull_left[l_r]],rpoints[convexhull_left[l_last]])==false)
+                {
+                    l_b = l_r;
+                    r_b = r_l;
+                }
+                return std::pair<int,int>{l_b,r_b};
+            }
+            else 
+            {   
+                int r_last = (right_leftest-1+convexhull_right.size())%convexhull_right.size(), r_next = (right_leftest+1)%convexhull_right.size();
+                int l_next = (left_rightest-1+convexhull_left.size())%convexhull_left.size(),   l_last = (left_rightest+1)%convexhull_left.size();
+                int l_r = left_rightest, r_l = right_leftest;
+                int l_b = -1, r_b = -1;
+                while(l_b == -1 || r_b == -1)
+                {
+                    while(ToLeft(rpoints[convexhull_left[l_r]], rpoints[convexhull_right[r_l]], rpoints[convexhull_right[r_next]]) != true ||
+                          ToLeft(rpoints[convexhull_left[l_r]], rpoints[convexhull_right[r_l] ], rpoints[convexhull_right[r_last] ]) != true)
+                    {
+                        r_l = r_next;
+                        r_next = (right_leftest+1)%convexhull_right.size();
+                        r_last = (right_leftest-1+convexhull_right.size())%convexhull_right.size();
+                    }
+                    while(ToLeft(rpoints[convexhull_right[r_l]], rpoints[convexhull_left[l_r]], rpoints[convexhull_left[l_next]]) != false ||
+                          ToLeft(rpoints[convexhull_right[r_l]], rpoints[convexhull_left[l_r] ], rpoints[convexhull_left[l_last] ]) != false)
+                    {
+                        l_r = l_next;
+                        l_next = (left_rightest-1+convexhull_left.size())%convexhull_left.size();
+                        l_last = (left_rightest+1)%convexhull_left.size();
+                    }
+                    if(ToLeft(rpoints[convexhull_left[l_r]],rpoints[convexhull_right[r_l]],rpoints[convexhull_right[r_next]])==true && 
+                       ToLeft(rpoints[convexhull_left[l_r]],rpoints[convexhull_right[r_l]],rpoints[convexhull_right[r_last]])==true &&
+                       ToLeft(rpoints[convexhull_right[r_l]],rpoints[convexhull_left[l_r]],rpoints[convexhull_left[l_next]])==false &&
+                       ToLeft(rpoints[convexhull_right[r_l]],rpoints[convexhull_left[l_r]],rpoints[convexhull_left[l_last]])==false)
+                    {
+                        l_b = l_r;
+                        r_b = r_l;
+                    }
+                
+                }  
+                return std::pair<int,int>{l_b,r_b};
+            }
+        };
+        std::pair<int,int> top_points = func_find_tangent_top(rpoints, convexhull_left, convexhull_right);
+        std::pair<int,int> bottom_points = func_find_tangent_bottom(rpoints, convexhull_left, convexhull_right);
+        int l_t = top_points.first,     r_t = top_points.second;
+        int l_b = bottom_points.first,  r_b = bottom_points.second;
+        /* 3. find top cell */
+        Face_handle face_left = arrangement_left.faces_begin(), face_right = arrangement_right.faces_begin();
+        while(Is_In_Polygon(rpoints, convexhull_left[l_t], arrangement_left, face_left) == false)
+            face_left++;
+        while(Is_In_Polygon(rpoints, convexhull_right[r_t], arrangement_right, face_right) == false)
+            face_right++;
+
+
+        return rarrangement_left;
     }
 
-    Polyhedron Voronoi::dacVD(const DataPoints_2& rpoints, int begin, int end, Polyhedron& rpolyhedron)
+    Arrangement_2 Voronoi::dacVD(const DataPoints_2& rpoints, int begin, int end, Arrangement_2& arrangemet)
     {
         int mid = (begin + end) / 2;
         if(end - begin < 3)
-            return trivalVD(rpoints, begin, end, rpolyhedron);
-        return MergeVD(dacVD(rpoints, begin, mid, rpolyhedron), dacVD(rpoints, mid+1, end, rpolyhedron));
+            return trivalVD(rpoints, begin, end, arrangemet);
+        return MergeVD(rpoints, dacVD(rpoints, begin, mid, arrangemet), begin, mid, 
+                                dacVD(rpoints, mid+1, end, arrangemet), mid+1, end);
     }
 
-    void Voronoi::Voronoi_Divide_and_Conquer(const DataPoints_2& rpoints, Polyhedron& polyhedron)
+    void Voronoi::Voronoi_Divide_and_Conquer(DataPoints_2& points, Arrangement_2& rarrangement)
     {
-        DataPoints_2 points(rpoints);
         std::sort(points.begin(),points.end(),[](const Point_2& p1, const Point_2& p2)->bool{
             if(LTZERO(p1.x()-p2.x())) return true;
             else return false;
         });
 
-        typedef typename Polyhedron::HalfedgeDS HDS;
-        typedef CGAL::Polyhedron_incremental_builder_3<HDS> Polyhedron_Builder;
-        /* all zone for voronoi */
-        Polyhedron_Builder Builder(polyhedron.hds(), true);
-        Builder.begin_surface(4, 1);
-        Builder.add_vertex(Point_3(-2.5, -2.5, 0.0));
-        Builder.add_vertex(Point_3(-2.5,  2.5, 0.0));
-        Builder.add_vertex(Point_3( 2.5,  2.5, 0.0));
-        Builder.add_vertex(Point_3( 2.5, -2.5, 0.0));
-        Builder.begin_facet();
-        Builder.add_vertex_to_facet(0);
-        Builder.add_vertex_to_facet(1);
-        Builder.add_vertex_to_facet(2);
-        Builder.add_vertex_to_facet(3);
-        Builder.end_facet();
-        Builder.end_surface();
-    
-        int mid = (points.size()-1) / 2;
-        polyhedron = MergeVD(dacVD(points, 0, mid, polyhedron), dacVD(points, mid+1, points.size()-1, polyhedron));
+        std::vector<T_Point_2> tpoints;
+        for(auto point:points)
+            CGAL::insert_point(rarrangement, T_Point_2(point.x(),point.y()));
+        T_Segment_2 segment1(T_Point_2(-2.5,-2.5),T_Point_2(2.5,-2.5));
+        CGAL::insert(rarrangement, segment1);
+        T_Segment_2 segment2(T_Point_2( 2.5,-2.5),T_Point_2(2.5, 2.5));
+        CGAL::insert(rarrangement, segment2);
+        T_Segment_2 segment3(T_Point_2( 2.5,2.5),T_Point_2(-2.5,2.5));
+        CGAL::insert(rarrangement, segment3);
+        T_Segment_2 segment4(T_Point_2(-2.5,2.5),T_Point_2(-2.5,-2.5));
+        CGAL::insert(rarrangement, segment4);
+        
     }
 
-    void Voronoi::Voronoi_Sweep_Line(const DataPoints_2& rpoints, Polyhedron& polyhedron)
+    void Voronoi::Voronoi_Sweep_Line(const DataPoints_2& rpoints, Arrangement_2& rarrangement)
     {
 
     }

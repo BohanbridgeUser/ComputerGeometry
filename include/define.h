@@ -23,6 +23,8 @@
 #include <CGAL/HalfedgeDS_items_2.h>
 #include <CGAL/HalfedgeDS_decorator.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
+#include <CGAL/Arr_linear_traits_2.h>
+#include <CGAL/Arrangement_2.h>
 
 #include <CGAL/function_objects.h>
 #include <CGAL/Join_input_iterator.h>
@@ -73,7 +75,26 @@ namespace MyCG
                                                                     HDS;
     typedef CGAL::HalfedgeDS_decorator<HDS>
                                                                     HDS_decorator;
-
+    typedef CGAL::Arr_linear_traits_2<Kernel>                     
+                                                                    Traits_2;
+    typedef Traits_2::Point_2 
+                                                                    T_Point_2;
+    typedef Traits_2::Line_2
+                                                                    T_Line_2;
+    typedef Traits_2::Ray_2
+                                                                    T_Ray_2;
+    typedef Traits_2::Segment_2
+                                                                    T_Segment_2;
+    typedef CGAL::Arrangement_2<Traits_2>                         
+                                                                    Arrangement_2;
+    typedef typename Arrangement_2::Halfedge_handle
+                                                                    Halfedge_handle;
+    typedef typename Arrangement_2::Vertex_handle
+                                                                    Vertex_handle;
+    typedef typename Arrangement_2::Face_handle
+                                                                    Face_handle;
+    typedef typename Arrangement_2::Ccb_halfedge_circulator
+                                                                    Ccb_halfedge_circulator;
     /* OpenGL */
     typedef std::vector<float> 
                                                                     DataF;

@@ -38,6 +38,8 @@ class glViewer : public CGAL::QGLViewer
 
             typedef MyCG::Combination       Combination;
 
+            typedef MyCG::Arrangement_2     Arrangement_2;
+
             typedef MyCG::Model             Model;
         /// @}
         /// @name Life Circle
