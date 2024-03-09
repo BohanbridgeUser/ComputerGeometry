@@ -59,12 +59,43 @@ namespace MyCG
                                                                     Line_2;
     typedef CGAL::Line_3<Kernel>
                                                                     Line_3;
+    typedef CGAL::Ray_2<Kernel>
+                                                                    Ray_2;
+    typedef CGAL::Vector_2<Kernel>                                   
+                                                                    Vector_2;
     typedef CGAL::Polygon_2<Kernel>
                                                                     Polygon_2;                                                        
     typedef CGAL::Vector_3<Kernel>                                  
                                                                     Vector;
-    typedef CGAL::Polyhedron_3<Kernel,CGAL::Polyhedron_items_with_id_3>
+    template<class Refs> 
+    class MyFace : public CGAL::HalfedgeDS_face_base<Refs>
+    {
+        private:
+            int m_site;
+        public:
+            int& site() { return m_site; }
+            int site() const { return m_site; }
+    };
+    class My_Item : public CGAL::Polyhedron_items_with_id_3
+    {   
+        public:
+            template< class Refs, class Traits>
+            struct Face_wrapper {
+                typedef MyFace<Refs> Face;
+            };
+    };
+    typedef CGAL::Polyhedron_3<Kernel, My_Item>
                                                                     Polyhedron;
+    typedef typename Polyhedron::HalfedgeDS                          
+                                                                    HalfedgeDS;
+    typedef typename Polyhedron::Halfedge_handle                       
+                                                                    Halfedge_handle;
+    typedef typename Polyhedron::Vertex_handle                         
+                                                                    Vertex_handle;
+    typedef typename Polyhedron::Facet_handle                          
+                                                                    Facet_handle;
+    typedef CGAL::Polyhedron_incremental_builder_3<HalfedgeDS>
+                                                                    Incremental_Builder;
     typedef Kernel::Iso_cuboid_3                                    
                                                                     Bbox_3;                            
     typedef Kernel::Iso_rectangle_2                                    
@@ -87,14 +118,9 @@ namespace MyCG
                                                                     T_Segment_2;
     typedef CGAL::Arrangement_2<Traits_2>                         
                                                                     Arrangement_2;
-    typedef typename Arrangement_2::Halfedge_handle
-                                                                    Halfedge_handle;
-    typedef typename Arrangement_2::Vertex_handle
-                                                                    Vertex_handle;
-    typedef typename Arrangement_2::Face_handle
-                                                                    Face_handle;
-    typedef typename Arrangement_2::Ccb_halfedge_circulator
-                                                                    Ccb_halfedge_circulator;
+    typedef typename CGAL::Intersection_traits<CGAL::Epick, MyCG::T_Ray_2, MyCG::T_Segment_2>::result_type
+                                                                    Intersection_result;
+    
     /* OpenGL */
     typedef std::vector<float> 
                                                                     DataF;

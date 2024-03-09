@@ -154,7 +154,7 @@ namespace MyCG
             typedef CGAL::Creator_uniform_2<double,Point_2>  Creator;
             m_points_2.reserve(100);
             CGAL::Random_points_in_square_2<Point_2,Creator> g(2.0);
-            std::copy_n( g, 50, std::back_inserter(m_points_2));
+            std::copy_n( g, 10, std::back_inserter(m_points_2));
         }
 
         void Model::generate_segments_on_circle()

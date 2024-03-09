@@ -2,92 +2,26 @@
 #define _MYALGORITHM_H_
 
 #include "define.h"
+#include "Utility.h"
+#include <iostream>
+#include <vector>
+#include <deque>
+#include <stack>
+#include <queue>
+#include <set>
+#include <map>
+#include <unordered_map>
+#include <algorithm>
+#include <iterator>
 
 namespace MyCG
 {
-    #define EPS 1e-15
-    #define EQZERO(x) (fabs(x) < EPS)
-    #define LTZERO(x) (x < -EPS)
-    #define GTZERO(x) (x > EPS)
-    #define LTEQZERO(x) (x <= EPS)
-    #define GTEQZERO(x) (x >= -EPS)
-
-    /**
-     * @name Utility functions
-     * @brief This function return true if p3 is on the left side of the line p2p1;
-     * @details if p1, p2, p3 are collinear, return false;
-     * if p3 is on the right side of the line p2p1, return false;
-     * Only return true if p3 is on the left side of the line p2p1;
-     * */ 
-    double crossProduct(const Point_2& p1, const Point_2& p2, const Point_2& p3);
-
-    double dotProduct(const Point_2& p1, const Point_2& p2, const Point_2& p3);
-
-    double crossProduct(const Point_2& p1, const Point_2& p2);
-
-    double Norm(const Point_2& p);
-    
-    double Norm2(const Point_2& p);
-
-    bool between(const Point_2& p1, const Point_2& p2, const Point_2& p3);
-
-    bool ToLeft(const Point_2& p1, const Point_2& p2, const Point_2& p3);
-
-    bool ToRight(const Point_2& p1, const Point_2& p2, const Point_2& p3);
-
-    bool InTriangle(const Point_2& p1, const Point_2& p2, const Point_2& p3, const Point_2& p);
-    
-    bool sort_vertex_by_xy(const Point_2& pp1, const Point_2& pp2);
-
-    bool sort_vertex_by_yx(const Point_2& pp1, const Point_2& pp2);
-
-    int left_than_lowest(const DataPoints_2& rpoints, int begin=0);
-
-    int find_rightest(const DataPoints_2& rpoints, int index);
-
-    int find_rightest_index(const DataPoints_2& rpoints, std::vector<int> indices, int index);
-
     int DAC(const DataPoints_2& rpoints, std::vector<int>& convexhull_points, int begin, int end);
-
-    class Sort_Vertex_by_Angle
-    {
-        public:
-            Sort_Vertex_by_Angle(){};
-            bool operator()(const Point_2& p1, const Point_2& p2);
-
-            static void SetP0(const DataPoints_2& rpoints);
-            static Point_2 GetP0(){ return p0; }
-        private:
-            static Point_2 p0;
-    };
-
-    class Sort_Vertex_by_Angle_Index
-    {
-        public:
-            Sort_Vertex_by_Angle_Index(){};
-            bool operator()(const int i1, const int i2);
-
-            static void SetP0(const DataPoints_2& rpoints);
-            static int GetP0(){ return i0; }
-        private:
-            static int i0;
-            static const DataPoints_2* p_points;
-    };
-
-    class Sort_Vertex_by_XY
-    {
-        public:
-            bool operator()(const Point_2& p1, const Point_2& p2);
-    };
-
-    class Sort_Vertex_by_YX 
-    {
-        public:
-            bool operator()(const Point_2& p1, const Point_2& p2);
-    };
 
     class ConvexHull_2
     {
+        private:
+            
         public:
             static DataSegments_2 ConvexHull_2_TriMethod(const DataPoints_2& points);
             static DataSegments_2 ConvexHull_2_EE(const DataPoints_2& points);
@@ -95,6 +29,12 @@ namespace MyCG
             static DataSegments_2 ConvexHull_2_Graham_Scan(const DataPoints_2& points);
             static DataSegments_2 ConvexHull_2_Divide_and_Conquer(const DataPoints_2& points);
             static std::vector<int> ConvexHull_Graham_Scan_Index(const DataPoints_2& rpoints);
+            static std::pair<int,int> Find_Top_Tangent( const DataPoints_2& rpoints, 
+                                                        const std::vector<int>& convexhull_left,  const std::vector<int>& convexhull_right,
+                                                        int begin_l, int end_l, int begin_r, int end_r);
+            static std::pair<int,int> Find_Bottom_Tangent(const DataPoints_2& rpoints, 
+                                                          const std::vector<int>& convexhull_left,  const std::vector<int>& convexhull_right,
+                                                          int begin_l, int end_l, int begin_r, int end_r);
     };
 
     class Intersection_2
@@ -238,17 +178,19 @@ namespace MyCG
     class Voronoi
     {
         private:
+            static Ray_2 Get_Bisector_Ray(const Point_2& rpoint1, const Point_2& rpoint2);
+            static void Initialize_Voronoi(Polyhedron& rpolyhedron);
             static bool Is_In_Polygon(const DataPoints_2& rpoints, int index,
-                                      const Arrangement_2& rarrangement, const Arrangement_2::Face_handle& rface);
-            static Arrangement_2 trivalVD(const DataPoints_2& rpoints, int begin, int end, const Arrangement_2& rarrangement);
-            static Arrangement_2 MergeVD(const DataPoints_2& rpoints, Arrangement_2& rarrangement_left, int begin_l, int end_l,
-                                                                      Arrangement_2& rarrangement_right, int begin_r, int end_r);
-            static Arrangement_2 dacVD(const DataPoints_2& rpoints, int begin, int end, Arrangement_2& arrengment);
+                                      const Polyhedron& rpolyhedron, const Facet_handle& rface);
+            static Polyhedron trivalVD(const DataPoints_2& rpoints, int begin, int end, const Polyhedron& rpolyhedron);
+            static Polyhedron MergeVD(const DataPoints_2& rpoints, Polyhedron& rpolyhedron_left, int begin_l, int end_l,
+                                                                   Polyhedron& rpolyhedron_right, int begin_r, int end_r);
+            static Polyhedron dacVD(const DataPoints_2& rpoints, int begin, int end, Polyhedron& rpolyhedron);
         public:
             // static void Voronoi_Naive(const DataPoints_2& rpoints, HDS& rhds);
             // static void Voronoi_Incremental(const DataPoints_2& rpoints, HDS& rhds);
-            static void Voronoi_Divide_and_Conquer(DataPoints_2& rpoints, Arrangement_2& rarrangement);
-            static void Voronoi_Sweep_Line(const DataPoints_2& rpoints, Arrangement_2& rarrangement);
+            static void Voronoi_Divide_and_Conquer(DataPoints_2& rpoints, Polyhedron& rpolyhedron);
+            static void Voronoi_Sweep_Line(const DataPoints_2& rpoints, Polyhedron& rpolyhedron);
     };
 
 }

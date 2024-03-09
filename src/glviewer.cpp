@@ -380,65 +380,38 @@
         for(int i=15;i<18;i++)
             m_gl_display->setdisplaymode(i);
         DataPoints_2& points_2 = m_model->Get_DataPoints_2();
-        Polyhedron polygon;
-        std::pair<int,int> tangent_points;
-        std::vector<int> convexhull_left, convexhull_right;
-        Arrangement_2 arr;
-        arr.clear();
-        MyCG::Voronoi::Voronoi_Divide_and_Conquer(points_2, polygon, tangent_points, 
-                                                  convexhull_left, convexhull_right,
-                                                  arr);
-        std::cout << "Arrangement vertices: " << arr.number_of_vertices() << std::endl;
-        std::cout << "Arrangement edges: " << arr.number_of_edges() << std::endl;
-        std::cout << "Arrangement faces: " << arr.number_of_faces() << std::endl;
-        DataPoints_2 voronoi_sites(points_2), voronoi_vertices;
-        for(auto vertex_handle = arr.vertices_begin(); vertex_handle != arr.vertices_end(); ++vertex_handle)
-            voronoi_vertices.push_back(Point_2(vertex_handle->point().x(), vertex_handle->point().y()));
+        Polyhedron polyhedron;
+        MyCG::Voronoi::Voronoi_Divide_and_Conquer(points_2, polyhedron);
+        std::cout << "Number of vertices: "     << polyhedron.size_of_vertices()    << std::endl;
+        std::cout << "Number of halfedges: "    << polyhedron.size_of_halfedges()   << std::endl;
+        std::cout << "Number of facets: "       << polyhedron.size_of_facets()      << std::endl;
+
+        DataPoints_2 voronoi_vertices, voronoi_sites(points_2);
         DataSegments_2 voronoi_edges;
-        auto edge_handle = arr.halfedges_begin();
+
+        auto edge_iter = polyhedron.halfedges_begin();
         do{
-            auto curve = edge_handle->curve();
-            if(curve.is_segment())
-                voronoi_edges.push_back(Segment_2(curve.source(), curve.target()));
+            std::cout << "edge: " << edge_iter->vertex()->point() << " " << edge_iter->opposite()->vertex()->point() << std::endl;
+            std::cout << ((edge_iter->is_border())? "Is border edge\n":"Is not border edge\n");
+            edge_iter++;
+        }while(edge_iter != polyhedron.halfedges_end());
+        
+        auto vertex_handle = polyhedron.vertices_begin();
+        do
+        {
+            voronoi_vertices.push_back(Point_2(vertex_handle->point().x(), vertex_handle->point().y()));
+            vertex_handle++;
+        } while (vertex_handle != polyhedron.vertices_end());
+        
+        auto edge_handle = polyhedron.halfedges_begin();
+        do
+        {
+            Point_2 p1 (edge_handle->vertex()->point().x(), edge_handle->vertex()->point().y());
+            Point_2 p2 (edge_handle->opposite()->vertex()->point().x(), edge_handle->opposite()->vertex()->point().y());
+            voronoi_edges.push_back(Segment_2(p1,p2));
             edge_handle++;
-        }while(edge_handle != arr.halfedges_end());
-        // auto edge_iter = polygon.halfedges_begin();
-        // do{
-        //     std::cout << "edge: " << edge_iter->vertex()->point() << " " << edge_iter->opposite()->vertex()->point() << std::endl;
-        //     std::cout << ((edge_iter->is_border())? "Is border edge\n":"Is not border edge\n");
-        //     edge_iter++;
-        // }while(edge_iter != polygon.halfedges_end());
-
+        } while (edge_handle != polyhedron.halfedges_end());
         
-        // auto vertex_handle = polygon.vertices_begin();
-        // do
-        // {
-        //     voronoi_vertices.push_back(Point_2(vertex_handle->point().x(), vertex_handle->point().y()));
-        //     vertex_handle++;
-        // } while (vertex_handle != polygon.vertices_end());
-        
-        // auto edge_handle = polygon.halfedges_begin();
-        // do
-        // {
-        //     Point_2 p1 (edge_handle->vertex()->point().x(), edge_handle->vertex()->point().y());
-        //     Point_2 p2 (edge_handle->opposite()->vertex()->point().x(), edge_handle->opposite()->vertex()->point().y());
-        //     voronoi_edges.push_back(Segment_2(p1,p2));
-        //     edge_handle++;
-        // } while (edge_handle != polygon.halfedges_end());
-        
-        // for(int i=0;i<convexhull_left.size()-1;++i)
-        //     voronoi_edges.push_back(Segment_2(points_2[convexhull_left[i]], points_2[convexhull_left[i+1]]));
-        // voronoi_edges.push_back(Segment_2(points_2[convexhull_left[convexhull_left.size()-1]], points_2[convexhull_left[0]]));
-        // for(int i=0;i<convexhull_right.size()-1;++i)
-        //     voronoi_edges.push_back(Segment_2(points_2[convexhull_right[i]], points_2[convexhull_right[i+1]]));
-        // voronoi_edges.push_back(Segment_2(points_2[convexhull_right[convexhull_right.size()-1]], points_2[convexhull_right[0]]));
-        // voronoi_edges.push_back(Segment_2(points_2[convexhull_left[tangent_points.first]], points_2[convexhull_right[tangent_points.second]]));
-
-        // for(int i=0;i<points_2.size();++i)
-        // {
-        //     std::cout << "Point " << i << " : " << points_2[i] << std::endl;
-        // }
-        // std::cout << "Tangent points: " << tangent_points.first << " " << tangent_points.second << std::endl;
         points_data_to_display(voronoi_sites, m_gl_display->Get_pos_voronoi_sites());
         points_data_to_display(voronoi_vertices, m_gl_display->Get_pos_voronoi_vertices());
         segments_data_to_display(voronoi_edges, m_gl_display->Get_pos_voronoi_edges());
